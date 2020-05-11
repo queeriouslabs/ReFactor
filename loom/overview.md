@@ -8,3 +8,4 @@
   - Very common
   - Flexible in one direction of force, rigid in the other
   - Includes a retraction spring
+- Separate geared cams controlled by their own control rods, or individually via racks, to enable fancier designs, maybe even full programmability
