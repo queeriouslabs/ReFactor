@@ -14,3 +14,5 @@ We'll also probably expand this out into some kind of tree or graph as we consid
 - Clothing Assembly Machine (automatic cutting + sewing?)
 - Dining Tools (cups, plates, bowls, utensils)
 - Cooking Tools (pots, pans, utentils)
+- Energy Production
+  - Gyrocopter high altitude wind turbines?
