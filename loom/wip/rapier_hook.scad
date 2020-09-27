@@ -1,4 +1,4 @@
-shaft_radius = 5;
+shaft_radius = 4.5;
 shaft_height = 70;
 
 module nose() {
@@ -14,6 +14,12 @@ module nose() {
         }
         translate([0,0,-2*shaft_radius]) cube(4*shaft_radius, center = true);
     }
+}
+
+module tail() {
+    translate([0,0,-shaft_height])
+    rotate(180, [1,0,0])
+    nose();
 }
 
 module shaft() {
@@ -73,8 +79,8 @@ module hook_cross_hole_2() {
 }
 
 module tape_measure_slot() {
-    head_vertical = 1;
-    head_horizontal = 1;
+    head_vertical = 1.5;
+    head_horizontal = 1.5;
     head_height = 5.8;
     tape_width = 5.8;
     
@@ -97,4 +103,9 @@ difference() {
     nose();
     hook_notches();
     translate([0,0,-0.1]) hook_cross_hole_1();
+}
+
+difference(){
+    tail();
+    tape_measure_slot();
 }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   width="12.24mm"
+   height="63.9002539936mm"
+   viewBox="0 0 12.24 63.9002539936"
+   version="1.1"
+   id="svg903">
+  <metadata
+     id="metadata909">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs907" />
+  <g
+     style="fill:#000000;fill-opacity:1;stroke:none;opacity:0.388"
+     transform="translate(6.120000,13.780254) scale(1,-1)"
+     id="Sketch">
+    <path
+       style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.34999999;stroke-miterlimit:4;stroke-dasharray:none"
+       d="M -5,13.660254 H -6 V -50 H 6 V 13.660254 L 5,13.6603 C 5.0000254,10.898858 2.7615188,8.6602539 7.7071271e-5,8.6602519 7.9571271e-5,6.8739246 0.95299679,5.2232927 2.5,4.3301285 4.0470054,3.436963 5,1.7863279 5,0 v -40 c 0,-6.666664 -10,-6.666664 -10,0 V 0 c -1.1e-6,1.786329 0.9529937,3.4369655 2.5,4.33013 C -0.95299679,5.2232927 7.4575624e-5,6.8739246 7.7075624e-5,8.66025 -2.7613482,8.66025 -5.0000022,10.898829 -5,13.660254 Z"
+       id="Sketch_w0000" />
+    <title
+       id="title900">Sketch</title>
+  </g>
+</svg>
