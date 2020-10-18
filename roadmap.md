@@ -8,33 +8,35 @@ We'll also probably expand this out into some kind of tree or graph as we consid
 
 # Human Needs and Their Tools
 
+In brackets for each leaf-level idea is a status (if we've begun working on it at all, or if someone else has), and rough guess at the confrontationality required to deploy the technique widely. Some techniques do not require confrontation w/ the state or with capital for deployment, while others fundamentally do (eg. because of amounts f land use required to do the deployment). Low confrontation risk is useful as a starting point for actual deployment not just exploration. Entries marked as low confrontationality may have high confrontationalit variants but do not _require_ confrontation to be widely deployed.
+
 - Level 0 Needs
   - Food
     - Food Growth
-      - [DONE] Chestnut Trees
-      - Plant Walls
-      -
+      - [DONE; MID-HIGH] Chestnut Trees
+      - [LOW] Plant Walls
+      - [LOW] End-to-end Automated Hydroponics
     - Cooking Tools (pots, pans, utentils)
     - Dining Tools (cups, plates, bowls, utensils)
   - Water
-    - [DONE] NMSU Passive Solar Thermal Evaporators
+    - [DONE; HIGH] NMSU Passive Solar Thermal Evaporators
   - Shelter
   - Clothing
-    - [WIP] Loom
-    - Yarn/Thread Spinning Machine
-    - Clothing Assembly Machine (automatic cutting + sewing?)
+    - [WIP, LOW] Loom
+    - [LOW] Yarn/Thread Spinning Machine
+    - [LOW] Clothing Assembly Machine (automatic cutting + sewing?)
 - Level 1 Needs
   - Hygiene
   - Healthcare
   - Education
 - Level 2 Needs
   - Energy/Electricity
-    - Gyrocopter high altitude wind turbines?
-    - Solar Thermal Heat Storage
-    - Stirling Engines
+    - [HIGH] Gyrocopter high altitude wind turbines?
+    - [HIGH] Solar Thermal Heat Storage
+    - [LOW-MID] Stirling Engines
   - Computation
   - Communications
-    - [WIP] Point-to-point Laser Link
+    - [WIP, LOW-MID] Point-to-point Laser Link
 
 # Level 0 Needs
 
