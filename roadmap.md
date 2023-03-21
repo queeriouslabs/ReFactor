@@ -8,7 +8,7 @@ We'll also probably expand this out into some kind of tree or graph as we consid
 
 # Human Needs and Their Tools
 
-In brackets for each leaf-level idea is a status (if we've begun working on it at all, or if someone else has), and rough guess at the confrontationality required to deploy the technique widely. Some techniques do not require confrontation w/ the state or with capital for deployment, while others fundamentally do (eg. because of amounts f land use required to do the deployment). Low confrontation risk is useful as a starting point for actual deployment not just exploration. Entries marked as low confrontationality may have high confrontationalit variants but do not _require_ confrontation to be widely deployed.
+In brackets for each leaf-level idea is a status (if we've begun working on it at all, or if someone else has), and rough guess at the confrontationality required to deploy the technique widely. Some techniques do not require confrontation w/ the state or with capital for deployment, while others fundamentally do (eg. because of amounts f land use required to do the deployment). Low confrontation risk is useful as a starting point for actual deployment not just exploration. Entries marked as low confrontationality may have high confrontationality variants but do not _require_ confrontation to be widely deployed.
 
 - Level 0 Needs
   - Food
@@ -18,6 +18,10 @@ In brackets for each leaf-level idea is a status (if we've begun working on it a
       - [LOW] End-to-end Automated Hydroponics
     - Cooking Tools (pots, pans, utentils)
     - Dining Tools (cups, plates, bowls, utensils)
+    - Automation
+      - Processing raw food into ingredient form
+      - Preparing food from ingredients
+      - Cleaning prep tools
   - Water
     - [DONE; HIGH] NMSU Passive Solar Thermal Evaporators
   - Shelter

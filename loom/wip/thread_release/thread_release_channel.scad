@@ -28,8 +28,21 @@ module hole() {
 }
 
 
-i = 8;
+*for (i = [0:7]) {
+    difference() {
+        translate([0,0,i*10]) separator_block();
+        translate([0,0,0]) hole();
+    }
+}
+
+LENGTH = 72;
+
 difference() {
-    translate([0,0,0]) separator_block();
-    translate([0,0,-10*i]) hole();
+    translate([0,0,LENGTH/2])
+    cube([30,HEIGHT,LENGTH], center = true);
+    
+    hole();
+    
+    translate([100,0,0])
+    cube([200,200,200], center = true);
 }

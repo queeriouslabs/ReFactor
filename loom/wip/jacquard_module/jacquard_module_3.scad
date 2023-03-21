@@ -1,0 +1,110 @@
+$fn = 32;
+
+mm = 1;
+cm = 10;
+
+HEDDLE_UPPER_TAB_LENGTH = 4*cm;
+HEDDLE_UPPER_TAB_HEIGHT = 1*cm;
+HEDDLE_FORK_TINE_WIDTH = 3*mm;
+HEDDLE_FORK_GAP = 6*mm;
+HEDDLE_FORK_WIDTH = 2*HEDDLE_FORK_TINE_WIDTH + HEDDLE_FORK_GAP;
+HEDDLE_FORK_HEIGHT = 2*cm;
+HEDDLE_LOWER_TAB_HEIGHT = 1*cm;
+HEDDLE_LIFT_TAB_MIN_WIDTH = 1*cm;
+HEDDLE_LIFT_TAB_SEPARATION = 5*mm;
+HEDDLE_LIFT_TAB_OFFSET = 2*mm;
+HEDDLE_LIFT_TAB_OFFSET_COUNT = 40;
+HEDDLE_LIFT_TAB_LEFT_EDGE = HEDDLE_LIFT_TAB_MIN_WIDTH + HEDDLE_LOWER_TAB_HEIGHT +
+                            HEDDLE_LIFT_TAB_OFFSET_COUNT * HEDDLE_LIFT_TAB_OFFSET +
+                            HEDDLE_LIFT_TAB_SEPARATION;
+HEDDLE_SUPPORT_TAB_WIDTH = 1*cm;
+HEDDLE_SUPPORT_TAB_COUNT = 4;
+HEDDLE_SUPPORT_TAB_LEFT_INSET = 5*cm;
+HEDDLE_SUPPORT_TAB_SEPARATION = 5*mm;
+HEDDLE_HEIGHT = 2*cm;
+HEDDLE_LENGTH = HEDDLE_SUPPORT_TAB_LEFT_INSET +
+                HEDDLE_SUPPORT_TAB_COUNT * HEDDLE_SUPPORT_TAB_WIDTH +
+                HEDDLE_SUPPORT_TAB_SEPARATION + 
+                HEDDLE_LIFT_TAB_LEFT_EDGE;
+
+AXEL_DIAMETER = 4.1*mm;
+AXEL_RADIUS = AXEL_DIAMETER/2;
+AXEL_MARGIN = 4*mm;
+AXEL_CENTER_X = AXEL_MARGIN + AXEL_RADIUS;
+AXEL_CENTER_Y = HEDDLE_HEIGHT - (AXEL_MARGIN + AXEL_RADIUS);
+
+
+module heddle(lift_index) {
+    /*
+                          5--6  9--10
+                          |  |  |  |
+                      3---4  7--8  |
+                    /              |
+    1-------------2                |
+    |                              |
+    |                              |
+    0------------19  16--15    12--11
+                  |   |   |   /
+                 18--17  14--13
+    
+    */
+    p0 = [0, 0];
+    p1 = [0, HEDDLE_HEIGHT];
+    p2 = [HEDDLE_LENGTH - HEDDLE_UPPER_TAB_LENGTH,
+            HEDDLE_HEIGHT];
+    p3 = [HEDDLE_LENGTH - HEDDLE_UPPER_TAB_LENGTH + HEDDLE_UPPER_TAB_HEIGHT,
+            HEDDLE_HEIGHT + HEDDLE_UPPER_TAB_HEIGHT];
+    p4 = [HEDDLE_LENGTH - HEDDLE_FORK_WIDTH,
+            HEDDLE_HEIGHT + HEDDLE_UPPER_TAB_HEIGHT];
+    p5 = [HEDDLE_LENGTH - HEDDLE_FORK_WIDTH,
+            HEDDLE_HEIGHT + HEDDLE_UPPER_TAB_HEIGHT + HEDDLE_FORK_HEIGHT];
+    p6 =  [HEDDLE_LENGTH - (HEDDLE_FORK_WIDTH - HEDDLE_FORK_GAP)/2 - HEDDLE_FORK_GAP,
+            HEDDLE_HEIGHT + HEDDLE_UPPER_TAB_HEIGHT + HEDDLE_FORK_HEIGHT];
+    p7 =  [HEDDLE_LENGTH - (HEDDLE_FORK_WIDTH - HEDDLE_FORK_GAP)/2 - HEDDLE_FORK_GAP,
+            HEDDLE_HEIGHT + HEDDLE_UPPER_TAB_HEIGHT];
+    p8 =  [HEDDLE_LENGTH - (HEDDLE_FORK_WIDTH - HEDDLE_FORK_GAP)/2,
+            HEDDLE_HEIGHT + HEDDLE_UPPER_TAB_HEIGHT];
+    p9 =  [HEDDLE_LENGTH - (HEDDLE_FORK_WIDTH - HEDDLE_FORK_GAP)/2,
+            HEDDLE_HEIGHT + HEDDLE_UPPER_TAB_HEIGHT + HEDDLE_FORK_HEIGHT];
+    p10 =  [HEDDLE_LENGTH,
+            HEDDLE_HEIGHT + HEDDLE_UPPER_TAB_HEIGHT + HEDDLE_FORK_HEIGHT];
+    p11 = [HEDDLE_LENGTH, 0];
+    p12 = [HEDDLE_LENGTH - HEDDLE_LIFT_TAB_SEPARATION - lift_index*HEDDLE_LIFT_TAB_OFFSET, 0];
+    p13 = [HEDDLE_LENGTH - HEDDLE_LIFT_TAB_SEPARATION - (lift_index+1)*HEDDLE_LIFT_TAB_OFFSET - HEDDLE_LOWER_TAB_HEIGHT,
+            -HEDDLE_LOWER_TAB_HEIGHT];
+    p14 = [HEDDLE_LENGTH - HEDDLE_LIFT_TAB_LEFT_EDGE,
+            -HEDDLE_LOWER_TAB_HEIGHT];
+    p15 = [HEDDLE_LENGTH - HEDDLE_LIFT_TAB_LEFT_EDGE,
+            0];
+    support_index = lift_index%HEDDLE_SUPPORT_TAB_COUNT;
+    p16 = [HEDDLE_LENGTH - HEDDLE_LIFT_TAB_LEFT_EDGE - HEDDLE_SUPPORT_TAB_SEPARATION - support_index*HEDDLE_SUPPORT_TAB_WIDTH,
+            0];
+    p17 = [HEDDLE_LENGTH - HEDDLE_LIFT_TAB_LEFT_EDGE - HEDDLE_SUPPORT_TAB_SEPARATION - support_index*HEDDLE_SUPPORT_TAB_WIDTH,
+            -HEDDLE_LOWER_TAB_HEIGHT];
+    p18 = [HEDDLE_LENGTH - HEDDLE_LIFT_TAB_LEFT_EDGE - HEDDLE_SUPPORT_TAB_SEPARATION - HEDDLE_SUPPORT_TAB_WIDTH - support_index*HEDDLE_SUPPORT_TAB_WIDTH,
+            -HEDDLE_LOWER_TAB_HEIGHT];
+    p19 = [HEDDLE_LENGTH - HEDDLE_LIFT_TAB_LEFT_EDGE - HEDDLE_SUPPORT_TAB_SEPARATION - HEDDLE_SUPPORT_TAB_WIDTH - support_index*HEDDLE_SUPPORT_TAB_WIDTH,
+            0];
+    
+    projection()
+    difference() {
+        linear_extrude(1*cm, center = true)
+        polygon([
+            p0,  p1,  p2,  p3,  p4,
+            p5,  p6,  p7,  p8,  p9,
+            p10, p11, p12, p13, p14,
+            p15, p16, p17, p18, p19,
+            p0
+        ]);
+        
+        translate([AXEL_CENTER_X,AXEL_CENTER_Y,0])
+        cylinder(h = 100*mm, d = AXEL_DIAMETER, center = true);
+    }
+}
+
+//for (i=[0:7]) {
+//    translate([0,i*70,0])
+//    heddle(i);
+//}
+
+heddle(10);
