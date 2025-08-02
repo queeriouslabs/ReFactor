@@ -72,10 +72,10 @@ GUIDE_FRAME_FACE_SCREW_THREADED_INSERT_RADIUS = 0.5*GUIDE_FRAME_FACE_SCREW_THREA
 GUIDE_FRAME_FACE_SCREW_DIAMETER = 4*mm;
 GUIDE_FRAME_FACE_SCREW_RADIUS = 0.5*GUIDE_FRAME_FACE_SCREW_DIAMETER;
 GUIDE_FRAME_COVER_GAP = 1*mm;
-END_STOP_THICKNESS = 4*mm;
-END_STOP_HEIGHT = GUIDE_FRAME_TOTAL_HEIGHT;
+END_PLATE_THICKNESS = 4*mm;
+END_PLATE_HEIGHT = GUIDE_FRAME_TOTAL_HEIGHT;
 ROD_SNAP_GAP = 1*mm;
-CONTROL_CYLINDER_AXLE_LENGTH = END_STOP_THICKNESS+2*mm;
+CONTROL_CYLINDER_AXLE_LENGTH = END_PLATE_THICKNESS;
 // we add half the guide frame sidewall thickness because the control cylinder
 // proper doesn't stick out all the way, since the guide frame sidewalls
 // overlap by half their thickness
@@ -96,7 +96,7 @@ END_PLATE_MOUNTING_NUT_WIDTH = 8*mm;
 END_PLATE_MOUNTING_NUT_THICKNESS = 3*mm;
 END_PLATE_MOUNTING_THREADED_INSERT_RADIUS = 2.5*mm;
 SCREW_CLEARANCE = 4*mm;
-INDEXING_GEAR_THICKNESS = GUIDE_FRAME_INDEXING_LAYER_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS; //2*END_STOP_THICKNESS;
+INDEXING_GEAR_THICKNESS = GUIDE_FRAME_INDEXING_LAYER_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS; //2*END_PLATE_THICKNESS;
 SELECTOR_RATCHET_GEAR_THICKNESS = 6*mm;
 SELECTOR_RATCHET_GEAR_RADIUS = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 1*mm;
 SELECTOR_RATCHET_GEAR_DIAMETER = 2*SELECTOR_RATCHET_GEAR_RADIUS;
@@ -587,18 +587,18 @@ module guide_frame_end_plate(has_pawl_shield) {
     collar_width = 2*cm;
     pawl_area_width = 1*cm;
     end_plate_width = GUIDE_FRAME_WIDTH+collar_width+pawl_area_width;
-    translate([0,-0.5*collar_width-0.5*pawl_area_width,-0.5*END_STOP_HEIGHT + CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_TOP_MARGIN])
-    cube([END_STOP_THICKNESS,end_plate_width,END_STOP_HEIGHT], center=true);
+    translate([0,-0.5*collar_width-0.5*pawl_area_width,-0.5*END_PLATE_HEIGHT + CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_TOP_MARGIN])
+    cube([END_PLATE_THICKNESS,end_plate_width,END_PLATE_HEIGHT], center=true);
 
 
     // control cylinder holes
     s = 10*cm;
 
     translate([0,control_cylinder_center,0]) {
-      double_cone_reference(delta = PROCESS_DELTA);
+      double_cone_reference(delta = 0.5*PROCESS_DELTA);
       
       translate([0,0.5*s,0])
-      double_wedge_reference(s = s);
+      double_wedge_reference(s = s, delta = 0*PROCESS_DELTA);
     }
 
     translate([ 0
@@ -606,10 +606,10 @@ module guide_frame_end_plate(has_pawl_shield) {
               , -CONTROL_CYLINDER_RADIUS - GUIDE_FRAME_MIDDLE_HEIGHT - CONTROL_CYLINDER_RADIUS
               ])
     {
-      double_cone_reference(delta = PROCESS_DELTA);
+      double_cone_reference(delta = 2*PROCESS_DELTA);
 
       translate([0,0.5*s,0])
-      double_wedge_reference(s = s);
+      double_wedge_reference(s = s, delta = PROCESS_DELTA);
     }
 
     // screw holes
@@ -633,7 +633,7 @@ module guide_frame_end_plate(has_pawl_shield) {
     //   ])
     difference() {
       translate([
-        0.5*END_STOP_THICKNESS+0.5*shield_width-0.5*mm,
+        0.5*END_PLATE_THICKNESS+0.5*shield_width-0.5*mm,
         control_cylinder_center - 2*mm,
         -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 2*mm
       ])
@@ -644,14 +644,14 @@ module guide_frame_end_plate(has_pawl_shield) {
       
       difference() {
         translate([
-          0.5*END_STOP_THICKNESS+0.5*shield_width,
+          0.5*END_PLATE_THICKNESS+0.5*shield_width,
           control_cylinder_center,
           -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 6*mm
         ])
         cube([2*cm, 2*cm, 2*cm], center = true);
 
         translate([
-          0.5*END_STOP_THICKNESS+0.5*shield_width,
+          0.5*END_PLATE_THICKNESS+0.5*shield_width,
           control_cylinder_center - 15.5*mm,
           -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 1*cm - 6*mm
         ])
@@ -659,7 +659,7 @@ module guide_frame_end_plate(has_pawl_shield) {
         cube([2*cm, 2*cm, 2*cm], center = true);
 
         translate([
-          0.5*END_STOP_THICKNESS+0.5*shield_width,
+          0.5*END_PLATE_THICKNESS+0.5*shield_width,
           control_cylinder_center + 13*mm,
           -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 1*cm - 4*mm
         ])
@@ -668,7 +668,7 @@ module guide_frame_end_plate(has_pawl_shield) {
       }
 
       translate([
-        0.5*END_STOP_THICKNESS+0.5*shield_width,
+        0.5*END_PLATE_THICKNESS+0.5*shield_width,
         control_cylinder_center - 7*mm,
         -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 11*mm
       ])
@@ -676,7 +676,7 @@ module guide_frame_end_plate(has_pawl_shield) {
       cube([2*cm, 2*cm, 2*cm], center = true);
 
       translate([
-        0.5*END_STOP_THICKNESS+0.5*shield_width,
+        0.5*END_PLATE_THICKNESS+0.5*shield_width,
         control_cylinder_center + 7*mm,
         -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 11*mm
       ])
@@ -694,8 +694,9 @@ module guide_frame_end_plate(has_pawl_shield) {
       // release pawl clearance disk
       // YES using SELECTOR_RATCHET_GEAR_THICKNESS is correct here!
       // we need to cut away the vertical columns only, not the top guard profile
+      clearance_spacing = 1.5*mm;
       translate([
-        -50*cm + 0.5*END_STOP_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
+        -50*cm + 0.5*END_PLATE_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + clearance_spacing,
         control_cylinder_center,
         -CONTROL_CYLINDER_DIAMETER - GUIDE_FRAME_MIDDLE_HEIGHT
       ])
@@ -709,7 +710,7 @@ module guide_frame_end_plate(has_pawl_shield) {
 
       // selector ratchet insertion clearance block
       translate([
-        -50*cm + 0.5*END_STOP_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
+        -50*cm + 0.5*END_PLATE_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + clearance_spacing,
         50*cm + control_cylinder_center,
         -SELECTOR_RATCHET_GEAR_RADIUS - 0*mm
       ])
@@ -717,7 +718,7 @@ module guide_frame_end_plate(has_pawl_shield) {
 
       // selector ratchet clearance disk
       translate([
-        -50*cm + 0.5*END_STOP_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
+        -50*cm + 0.5*END_PLATE_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + clearance_spacing,
         control_cylinder_center,
         0
       ])
@@ -960,9 +961,9 @@ module pawl_guard() {
   // translate([
   //   0,
   //   -end_plate_width-18.65*mm,
-  //   -0.5*END_STOP_HEIGHT + CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_TOP_MARGIN
+  //   -0.5*END_PLATE_HEIGHT + CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_TOP_MARGIN
   // ])
-  // cube([END_STOP_THICKNESS,end_plate_width,END_STOP_HEIGHT], center=true);
+  // cube([END_PLATE_THICKNESS,end_plate_width,END_PLATE_HEIGHT], center=true);
 
   // pawl shield
   shield_thickness = 1*mm;
@@ -978,7 +979,7 @@ module pawl_guard() {
   //   ])
   difference() {
     translate([
-      0.5*END_STOP_THICKNESS+0.5*shield_width-0.5*mm,
+      0.5*END_PLATE_THICKNESS+0.5*shield_width-0.5*mm,
       CONTROL_CYLINDER_CENTER_OFFSET - 2*mm,
       -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 2*mm
     ])
@@ -989,14 +990,14 @@ module pawl_guard() {
     
     difference() {
       translate([
-        0.5*END_STOP_THICKNESS+0.5*shield_width,
+        0.5*END_PLATE_THICKNESS+0.5*shield_width,
         CONTROL_CYLINDER_CENTER_OFFSET,
         -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 6*mm
       ])
       cube([2*cm, 2*cm, 2*cm], center = true);
 
       translate([
-        0.5*END_STOP_THICKNESS+0.5*shield_width,
+        0.5*END_PLATE_THICKNESS+0.5*shield_width,
         CONTROL_CYLINDER_CENTER_OFFSET - 15.5*mm,
         -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 1*cm - 6*mm
       ])
@@ -1004,7 +1005,7 @@ module pawl_guard() {
       cube([2*cm, 2*cm, 2*cm], center = true);
 
       translate([
-        0.5*END_STOP_THICKNESS+0.5*shield_width,
+        0.5*END_PLATE_THICKNESS+0.5*shield_width,
         CONTROL_CYLINDER_CENTER_OFFSET + 13*mm,
         -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 1*cm - 4*mm
       ])
@@ -1013,7 +1014,7 @@ module pawl_guard() {
     }
 
     translate([
-      0.5*END_STOP_THICKNESS+0.5*shield_width,
+      0.5*END_PLATE_THICKNESS+0.5*shield_width,
       CONTROL_CYLINDER_CENTER_OFFSET - 7*mm,
       -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 11*mm
     ])
@@ -1021,7 +1022,7 @@ module pawl_guard() {
     cube([2*cm, 2*cm, 2*cm], center = true);
 
     translate([
-      0.5*END_STOP_THICKNESS+0.5*shield_width,
+      0.5*END_PLATE_THICKNESS+0.5*shield_width,
       CONTROL_CYLINDER_CENTER_OFFSET + 7*mm,
       -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 11*mm
     ])
@@ -1040,7 +1041,7 @@ module pawl_guard() {
     // YES using SELECTOR_RATCHET_GEAR_THICKNESS is correct here!
     // we need to cut away the vertical columns only, not the top guard profile
     translate([
-      -50*cm + 0.5*END_STOP_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
+      -50*cm + 0.5*END_PLATE_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
       CONTROL_CYLINDER_CENTER_OFFSET,
       -CONTROL_CYLINDER_DIAMETER - GUIDE_FRAME_MIDDLE_HEIGHT
     ])
@@ -1054,7 +1055,7 @@ module pawl_guard() {
 
     // selector ratchet insertion clearance block
     translate([
-      -50*cm + 0.5*END_STOP_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
+      -50*cm + 0.5*END_PLATE_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
       50*cm + CONTROL_CYLINDER_CENTER_OFFSET,
       -SELECTOR_RATCHET_GEAR_RADIUS - 0*mm
     ])
@@ -1062,7 +1063,7 @@ module pawl_guard() {
 
     // selector ratchet clearance disk
     translate([
-      -50*cm + 0.5*END_STOP_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
+      -50*cm + 0.5*END_PLATE_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
       CONTROL_CYLINDER_CENTER_OFFSET,
       0
     ])
@@ -1503,7 +1504,7 @@ module control_cylinder(is_release_cylinder = false) {
     cylinder(r = CONTROL_CYLINDER_RADIUS, h = INDEXING_GEAR_THICKNESS, center = true);
 
     // indexing gear teeth
-    translate([-5*cm - 0.5*END_STOP_THICKNESS,0,0])
+    translate([-5*cm - 0.5*END_PLATE_THICKNESS,0,0])
     for (i = [1:INDEXING_DETENT_COUNT]) {
       s = BALL_DIAMETER+PROCESS_DELTA;
       rotate([(i-1)*INDEXING_DETENT_ANGLE,0,0])
@@ -1795,7 +1796,7 @@ module flat_spring(n, w, l, t, s) {
 
 // intersection() {
 // translate([0,-CONTROL_CYLINDER_CENTER_OFFSET,0])
-//guide_frame();
+// guide_frame();
 
 // translate([0,-23.5*mm,0])
 // guide_frame_cover(indexing_end = false);
@@ -1833,18 +1834,18 @@ module flat_spring(n, w, l, t, s) {
 
 // end stop
 // intersection() {
-total_control_cylinder_heddle_length =
-    HEDDLE_COUNT * CONTROL_CYLINDER_LENGTH
-    + INDEXING_GEAR_THICKNESS;
-translate([
-  total_control_cylinder_heddle_length-0.1,
-  0,
-  0
-])
-guide_frame_end_plate();
+// total_control_cylinder_heddle_length =
+//     HEDDLE_COUNT * CONTROL_CYLINDER_LENGTH
+//     + INDEXING_GEAR_THICKNESS;
+// translate([
+//   total_control_cylinder_heddle_length,
+//   0,
+//   0
+// ])
+guide_frame_end_plate(has_pawl_shield=true);
 
-// translate([0,0,-1.7*cm])
-// cube([100*cm, 5*cm, 2*cm], center = true);
+// translate([0,-1.5*cm,0*cm])
+// cube([100*cm, 3*cm, 3*cm], center = true);
 // }
 
 // translate([0,END_PLATE_MOUNTING_HOLE_TMB_Y,END_PLATE_MOUNTING_HOLE_T_Z])
