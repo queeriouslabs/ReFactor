@@ -79,7 +79,11 @@ CONTROL_CYLINDER_AXLE_LENGTH = END_PLATE_THICKNESS;
 // we add half the guide frame sidewall thickness because the control cylinder
 // proper doesn't stick out all the way, since the guide frame sidewalls
 // overlap by half their thickness
-CONTROL_CYLINDER_SIDEWALL_THICKNESS = 0.5*GUIDE_FRAME_SIDEWALL_THICKNESS;
+// we add a compensation for the bearing because without it, the bearing will
+// tend to apply an ourward force to the control cylinder, so we add some length
+// and that lets us shim the bearing as needed
+CONTROL_CYLINDER_SIDEWALL_BEARING_COMPENSATION = 0.5*mm;
+CONTROL_CYLINDER_SIDEWALL_THICKNESS = 0.5*GUIDE_FRAME_SIDEWALL_THICKNESS + CONTROL_CYLINDER_SIDEWALL_BEARING_COMPENSATION;
 END_PLATE_MOUNTING_HOLE_TMB_Y = 10*mm;
 END_PLATE_MOUNTING_HOLE_T_Z =
   CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_TOP_MARGIN;
@@ -535,7 +539,7 @@ module guide_frame_cover_full_single() {
 }
 
 module guide_frame_end_plate_screw_holes() {
-  margin = 2*mm;
+  margin = 10*mm;
   
   translate([
     0,
@@ -580,7 +584,7 @@ module guide_frame_end_plate_screw_holes() {
   }
 }
 
-module guide_frame_end_plate(has_pawl_shield) {
+module guide_frame_end_plate(indexing_end) {
   control_cylinder_center = -0.5*GUIDE_FRAME_WIDTH;
 
   difference() {
@@ -593,12 +597,22 @@ module guide_frame_end_plate(has_pawl_shield) {
 
     // control cylinder holes
     s = 10*cm;
+    dc_delta = 0.5*PROCESS_DELTA;
+    dw_delta = 0;
 
     translate([0,control_cylinder_center,0]) {
-      double_cone_reference(delta = 0.5*PROCESS_DELTA);
-      
-      translate([0,0.5*s,0])
-      double_wedge_reference(s = s, delta = 0*PROCESS_DELTA);
+      if(indexing_end) {
+        double_cone_reference(delta = dc_delta);
+        
+        translate([0,0.5*s,0])
+        double_wedge_reference(s = s, delta = dw_delta);
+      } else {
+        rotate([0,90,0])
+        cylinder(r = CONTROL_CYLINDER_RADIUS + dc_delta, h = 10*cm, center = true);
+
+        translate([0,0.5*s,0])
+        cube([s, s, CONTROL_CYLINDER_DIAMETER + 2*dw_delta], center = true);
+      }
     }
 
     translate([ 0
@@ -606,11 +620,20 @@ module guide_frame_end_plate(has_pawl_shield) {
               , -CONTROL_CYLINDER_RADIUS - GUIDE_FRAME_MIDDLE_HEIGHT - CONTROL_CYLINDER_RADIUS
               ])
     {
-      double_cone_reference(delta = 2*PROCESS_DELTA);
+      if (indexing_end) {
+        double_cone_reference(delta = dc_delta);
 
-      translate([0,0.5*s,0])
-      double_wedge_reference(s = s, delta = PROCESS_DELTA);
+        translate([0,0.5*s,0])
+        double_wedge_reference(s = s, delta = dw_delta);
+      } else {
+        rotate([0,90,0])
+        cylinder(r = CONTROL_CYLINDER_RADIUS + dc_delta, h = 10*cm, center = true);
+
+        translate([0,0.5*s,0])
+        cube([s, s, CONTROL_CYLINDER_DIAMETER + 2*dw_delta], center = true);
+      }
     }
+
 
     // screw holes
 
@@ -618,7 +641,7 @@ module guide_frame_end_plate(has_pawl_shield) {
 
   }
 
-  if (has_pawl_shield) {
+  if (indexing_end) {
     // pawl shield
     shield_thickness = 1*mm;
     shield_width = SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 5*mm; //RELEASE_PAWL_GEAR_THICKNESS;
@@ -1561,10 +1584,12 @@ module control_cylinder(is_release_cylinder = false) {
     translate([-CONTROL_CYLINDER_SIDEWALL_THICKNESS, 0, 0]) {
       // double cone axle
       translate([-0.5*CONTROL_CYLINDER_AXLE_LENGTH,0,0])
-      intersection() {
-        cube([CONTROL_CYLINDER_AXLE_LENGTH, 10*cm, 10*cm], center = true);
-        double_cone_reference();
-      }
+      // intersection() {
+      //   cube([CONTROL_CYLINDER_AXLE_LENGTH, 10*cm, 10*cm], center = true);
+      //   double_cone_reference();
+      // }
+      rotate([0,90,0])
+      cylinder(r = CONTROL_CYLINDER_RADIUS, h = CONTROL_CYLINDER_AXLE_LENGTH, center = true);
 
       // cylindrical axle
       // translate([-0.5*CONTROL_CYLINDER_AXLE_LENGTH,0,0])
@@ -1834,15 +1859,15 @@ module flat_spring(n, w, l, t, s) {
 
 // end stop
 // intersection() {
-// total_control_cylinder_heddle_length =
-//     HEDDLE_COUNT * CONTROL_CYLINDER_LENGTH
-//     + INDEXING_GEAR_THICKNESS;
-// translate([
-//   total_control_cylinder_heddle_length,
-//   0,
-//   0
-// ])
-guide_frame_end_plate(has_pawl_shield=true);
+total_control_cylinder_heddle_length =
+    HEDDLE_COUNT * CONTROL_CYLINDER_LENGTH
+    + INDEXING_GEAR_THICKNESS;
+translate([
+  total_control_cylinder_heddle_length,
+  0,
+  0
+])
+%guide_frame_end_plate(indexing_end=true);
 
 // translate([0,-1.5*cm,0*cm])
 // cube([100*cm, 3*cm, 3*cm], center = true);
@@ -1858,16 +1883,16 @@ guide_frame_end_plate(has_pawl_shield=true);
 
 // translate([-11.5*cm,0,0])
 // intersection() {
+translate([0,CONTROL_CYLINDER_CENTER_OFFSET,-CONTROL_CYLINDER_DIAMETER-GUIDE_FRAME_MIDDLE_HEIGHT])
 // rotate([-8*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
-// translate([0,CONTROL_CYLINDER_CENTER_OFFSET,0])
-// control_cylinder(is_release_cylinder = false);
+#control_cylinder(is_release_cylinder = false);
 
-// translate([0,CONTROL_CYLINDER_CENTER_OFFSET,-CONTROL_CYLINDER_DIAMETER-GUIDE_FRAME_MIDDLE_HEIGHT])
-// rotate([-0.5*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
-// control_cylinder(is_release_cylinder = true);
+translate([0,CONTROL_CYLINDER_CENTER_OFFSET,0])
+rotate([-4*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
+#control_cylinder(is_release_cylinder = true);
 
-// translate([1.5*cm,0,0])
-// #cube([4.4*cm, 5*cm, 20*cm], center = true);
+// translate([-0.7*cm,0,0])
+// #cube([1.5*cm, 5*cm, 20*cm], center = true);
 // }
 
 
