@@ -16,7 +16,6 @@ HEDDLE_ROD_MINI_DETENT_SIZE = BALL_DIAMETER+PROCESS_DELTA;
 HEDDLE_ROD_DETENT_SIZE = HEDDLE_ROD_MINI_DETENT_SIZE + HEDDLE_ROD_RISE;
 HEDDLE_ROD_SEGMENT_SEPARATION = 1*cm;
 HEDDLE_ROD_BOTTOM_MARGIN = 3*cm;
-GUIDE_FRAME_TOP_MARGIN = 15*mm;
 CONTROL_CYLINDER_BALL_DETENT_SIZE = 0.4 + BALL_DIAMETER;
 CONTROL_CYLINDER_BALL_DETENT_ANGLE = 360/20; //360/(HEDDLE_COUNT+1);
 // we use max(MAX_HEDDLE_COUNT, 1+HEDDLE_COUNT) for the following reason:
@@ -30,9 +29,14 @@ CONTROL_CYLINDER_CIRCUMFERENCE = max(MAX_HEDDLE_COUNT, 1+HEDDLE_COUNT)*CONTROL_C
 CONTROL_CYLINDER_RADIUS = CONTROL_CYLINDER_CIRCUMFERENCE / (2*PI);
 CONTROL_CYLINDER_DIAMETER = 2*CONTROL_CYLINDER_RADIUS;
 CONTROL_CYLINDER_AXLE_RADIUS = CONTROL_CYLINDER_RADIUS - 5*mm;
+GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT = abs(
+        -HEDDLE_ROD_RISE
+        - HEDDLE_ROD_SEGMENT_SEPARATION
+        - HEDDLE_ROD_MINI_DETENT_SIZE
+    ) - CONTROL_CYLINDER_DIAMETER;
 HEDDLE_ROD_TOP_MARGIN = CONTROL_CYLINDER_RADIUS
                       - HEDDLE_ROD_MINI_DETENT_SIZE/2
-                      + GUIDE_FRAME_TOP_MARGIN;
+                      + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT;
 HEDDLE_ROD_LENGTH = HEDDLE_ROD_BOTTOM_MARGIN +
                     HEDDLE_ROD_SEGMENT_SEPARATION +
                     HEDDLE_ROD_TOP_MARGIN +
@@ -51,21 +55,15 @@ GUIDE_FRAME_THICKNESS = GUIDE_FRAME_HOLE_THICKNESS + 2*GUIDE_FRAME_SIDEWALL_THIC
 GUIDE_FRAME_INDEXING_LAYER_THICKNESS = 1*cm;
 GUIDE_FRAME_SINGLE_SEPARATION = GUIDE_FRAME_HOLE_THICKNESS + GUIDE_FRAME_SIDEWALL_THICKNESS;
 GUIDE_FRAME_WIDTH = CONTROL_CYLINDER_RADIUS + BALL_RADIUS + HEDDLE_ROD_WIDTH + 12*mm;
-GUIDE_FRAME_BOTTOM_MARGIN = 15*mm;
 GUIDE_FRAME_HEIGHT = CONTROL_CYLINDER_DIAMETER;
 CONTROL_CYLINDER_CENTER_OFFSET = -GUIDE_FRAME_WIDTH/2;
 GUIDE_FRAME_CONTROL_WIDTH = 5*mm;
 CONTROL_CYLINDER_LENGTH = GUIDE_FRAME_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS;
-GUIDE_FRAME_MIDDLE_HEIGHT = abs(
-        -HEDDLE_ROD_RISE
-        - HEDDLE_ROD_SEGMENT_SEPARATION
-        - HEDDLE_ROD_MINI_DETENT_SIZE
-    ) - GUIDE_FRAME_HEIGHT;
-GUIDE_FRAME_TOTAL_HEIGHT = GUIDE_FRAME_TOP_MARGIN
+GUIDE_FRAME_TOTAL_HEIGHT = GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
                          + GUIDE_FRAME_HEIGHT
-                         + GUIDE_FRAME_MIDDLE_HEIGHT
+                         + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
                          + GUIDE_FRAME_HEIGHT
-                         + GUIDE_FRAME_BOTTOM_MARGIN;
+                         + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT;
 GUIDE_FRAME_CONTROL_CYLINDER_BEARING_SPACING = 0.5*mm;
 GUIDE_FRAME_FACE_SCREW_THREADED_INSERT_DIAMETER = 6*mm;
 GUIDE_FRAME_FACE_SCREW_THREADED_INSERT_RADIUS = 0.5*GUIDE_FRAME_FACE_SCREW_THREADED_INSERT_DIAMETER;
@@ -86,11 +84,11 @@ CONTROL_CYLINDER_SIDEWALL_BEARING_COMPENSATION = 0.5*mm;
 CONTROL_CYLINDER_SIDEWALL_THICKNESS = 0.5*GUIDE_FRAME_SIDEWALL_THICKNESS + CONTROL_CYLINDER_SIDEWALL_BEARING_COMPENSATION;
 END_PLATE_MOUNTING_HOLE_TMB_Y = 10*mm;
 END_PLATE_MOUNTING_HOLE_T_Z =
-  CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_TOP_MARGIN;
+  CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT;
 END_PLATE_MOUNTING_HOLE_M_Z =
-  - CONTROL_CYLINDER_RADIUS - 0.5*GUIDE_FRAME_MIDDLE_HEIGHT;
+  - CONTROL_CYLINDER_RADIUS - 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT;
 END_PLATE_MOUNTING_HOLE_B_Z =
-  - 3*CONTROL_CYLINDER_RADIUS - GUIDE_FRAME_MIDDLE_HEIGHT - 0.5*GUIDE_FRAME_BOTTOM_MARGIN;
+  - 3*CONTROL_CYLINDER_RADIUS - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT;
 END_PLATE_MOUNTING_SCREW_DIAMETER = 4*mm;
 END_PLATE_MOUNTING_SCREW_RADIUS = 0.5*END_PLATE_MOUNTING_SCREW_DIAMETER;
 END_PLATE_MOUNTING_SCREW_HOLE_RADIUS = END_PLATE_MOUNTING_SCREW_RADIUS + PROCESS_DELTA;
@@ -102,7 +100,7 @@ END_PLATE_MOUNTING_THREADED_INSERT_RADIUS = 2.5*mm;
 SCREW_CLEARANCE = 4*mm;
 INDEXING_GEAR_THICKNESS = GUIDE_FRAME_INDEXING_LAYER_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS; //2*END_PLATE_THICKNESS;
 SELECTOR_RATCHET_GEAR_THICKNESS = 6*mm;
-SELECTOR_RATCHET_GEAR_RADIUS = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 5*mm;
+SELECTOR_RATCHET_GEAR_RADIUS = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 5*mm;
 SELECTOR_RATCHET_GEAR_DIAMETER = 2*SELECTOR_RATCHET_GEAR_RADIUS;
 SELECTOR_RATCHET_TOOTH_DEPTH = 3*mm;
 SELECTOR_RATCHET_TOOTH_ANGLE = 37;
@@ -178,13 +176,13 @@ module heddle_detents_2() {
   detent_side_length = sqrt(0.5*HEDDLE_ROD_MINI_DETENT_SIZE^2);
   detent_start =
     HEDDLE_ROD_2_LENGTH
-    - GUIDE_FRAME_TOP_MARGIN
+    - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     - CONTROL_CYLINDER_RADIUS;
   
   detent_end =
     detent_start
     - CONTROL_CYLINDER_DIAMETER
-    - GUIDE_FRAME_MIDDLE_HEIGHT
+    - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     - HEDDLE_ROD_RISE
     - HEDDLE_ROD_RESET_MARGIN;
 
@@ -227,7 +225,7 @@ module heddle_detents_2() {
       0.5*HEDDLE_ROD_MINI_DETENT_SIZE,
       detent_start
       - CONTROL_CYLINDER_DIAMETER
-      - GUIDE_FRAME_MIDDLE_HEIGHT
+      - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
       + 0.5*HEDDLE_ROD_MINI_DETENT_SIZE
     ])
     rotate([45,0,0])
@@ -258,7 +256,7 @@ module heddle_detents_2() {
       0.5*HEDDLE_ROD_MINI_DETENT_SIZE,
       detent_start
       - CONTROL_CYLINDER_DIAMETER
-      - GUIDE_FRAME_MIDDLE_HEIGHT
+      - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
       - HEDDLE_ROD_RISE
       + 0.5*HEDDLE_ROD_MINI_DETENT_SIZE
     ])
@@ -389,7 +387,7 @@ module guide_frame_control_cylinder_holes() {
       0,
       CONTROL_CYLINDER_CENTER_OFFSET,
       - CONTROL_CYLINDER_DIAMETER
-      - GUIDE_FRAME_MIDDLE_HEIGHT
+      - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
   ])
   rotate([0,90,0])
   cylinder(r = CONTROL_CYLINDER_RADIUS+PROCESS_DELTA, h = 100*cm, center = true);
@@ -423,7 +421,7 @@ module guide_frame_bearing_ball_and_heddle_rod_holes() {
         0,
         -0.5*l+heddle_rod_center,
         -CONTROL_CYLINDER_DIAMETER
-        - GUIDE_FRAME_MIDDLE_HEIGHT
+        - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ])
     cube([
         HEDDLE_ROD_THICKNESS+PROCESS_DELTA,
@@ -455,11 +453,11 @@ module guide_frame_full_single_body() {
     //
     // top margin
     //
-    translate([0,0,GUIDE_FRAME_HEIGHT/2+GUIDE_FRAME_TOP_MARGIN/2])
+    translate([0,0,GUIDE_FRAME_HEIGHT/2+GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT/2])
     cube([
         GUIDE_FRAME_THICKNESS,
         GUIDE_FRAME_WIDTH,
-        GUIDE_FRAME_TOP_MARGIN
+        GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ], center = true);
 
     //
@@ -477,7 +475,7 @@ module guide_frame_full_single_body() {
     translate([
         0,
         0,
-        GUIDE_FRAME_MIDDLE_HEIGHT/2
+        GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT/2
         + GUIDE_FRAME_HEIGHT/2
         - HEDDLE_ROD_RISE
         - HEDDLE_ROD_SEGMENT_SEPARATION
@@ -486,7 +484,7 @@ module guide_frame_full_single_body() {
     cube([
         GUIDE_FRAME_THICKNESS,
         GUIDE_FRAME_WIDTH,
-        GUIDE_FRAME_MIDDLE_HEIGHT
+        GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ], center = true);
 
     //
@@ -511,14 +509,14 @@ module guide_frame_full_single_body() {
     translate([
         0,
         0,
-        -GUIDE_FRAME_BOTTOM_MARGIN/2
+        -GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT/2
         - 1.5*GUIDE_FRAME_HEIGHT
-        - GUIDE_FRAME_MIDDLE_HEIGHT
+        - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ])
     cube([
         GUIDE_FRAME_THICKNESS,
         GUIDE_FRAME_WIDTH,
-        GUIDE_FRAME_BOTTOM_MARGIN
+        GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ], center = true);
 }
 
@@ -591,7 +589,7 @@ module guide_frame_end_plate(indexing_end) {
     collar_width = 2*cm;
     pawl_area_width = 1*cm;
     end_plate_width = GUIDE_FRAME_WIDTH+collar_width+pawl_area_width;
-    translate([0,-0.5*collar_width-0.5*pawl_area_width,-0.5*END_PLATE_HEIGHT + CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_TOP_MARGIN])
+    translate([0,-0.5*collar_width-0.5*pawl_area_width,-0.5*END_PLATE_HEIGHT + CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
     cube([END_PLATE_THICKNESS,end_plate_width,END_PLATE_HEIGHT], center=true);
 
 
@@ -617,7 +615,7 @@ module guide_frame_end_plate(indexing_end) {
 
     translate([ 0
               , control_cylinder_center
-              , -CONTROL_CYLINDER_RADIUS - GUIDE_FRAME_MIDDLE_HEIGHT - CONTROL_CYLINDER_RADIUS
+              , -CONTROL_CYLINDER_RADIUS - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - CONTROL_CYLINDER_RADIUS
               ])
     {
       if (indexing_end) {
@@ -658,7 +656,7 @@ module guide_frame_end_plate(indexing_end) {
       translate([
         0.5*END_PLATE_THICKNESS+0.5*shield_width-0.5*mm,
         control_cylinder_center - 2*mm,
-        -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 1*cm
+        -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 1*cm
       ])
       rotate([-50,0,0])
       cube([shield_width, 3.5*cm, 2*cm], center = true);
@@ -669,14 +667,14 @@ module guide_frame_end_plate(indexing_end) {
       //   translate([
       //     0.5*END_PLATE_THICKNESS+0.5*shield_width,
       //     control_cylinder_center,
-      //     -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 6*mm
+      //     -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - 6*mm
       //   ])
       //   cube([2*cm, 2*cm, 2*cm], center = true);
 
       //   translate([
       //     0.5*END_PLATE_THICKNESS+0.5*shield_width,
       //     control_cylinder_center - 15.5*mm,
-      //     -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 1*cm - 6*mm
+      //     -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 1*cm - 6*mm
       //   ])
       //   rotate([45,0,0])
       //   cube([2*cm, 2*cm, 2*cm], center = true);
@@ -684,7 +682,7 @@ module guide_frame_end_plate(indexing_end) {
       //   translate([
       //     0.5*END_PLATE_THICKNESS+0.5*shield_width,
       //     control_cylinder_center + 13*mm,
-      //     -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 1*cm - 4*mm
+      //     -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 1*cm - 4*mm
       //   ])
       //   rotate([-40,0,0])
       //   cube([2*cm, 2*cm, 2*cm], center = true);
@@ -693,7 +691,7 @@ module guide_frame_end_plate(indexing_end) {
       // translate([
       //   0.5*END_PLATE_THICKNESS+0.5*shield_width,
       //   control_cylinder_center - 7*mm,
-      //   -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 11*mm
+      //   -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - 11*mm
       // ])
       // rotate([20,0,0])
       // cube([2*cm, 2*cm, 2*cm], center = true);
@@ -701,7 +699,7 @@ module guide_frame_end_plate(indexing_end) {
       // translate([
       //   0.5*END_PLATE_THICKNESS+0.5*shield_width,
       //   control_cylinder_center + 7*mm,
-      //   -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 11*mm
+      //   -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - 11*mm
       // ])
       // rotate([-20,0,0])
       // cube([2*cm, 2*cm, 2*cm], center = true);
@@ -730,7 +728,7 @@ module guide_frame_end_plate(indexing_end) {
       translate([
         0,
         control_cylinder_center,
-        -CONTROL_CYLINDER_DIAMETER - GUIDE_FRAME_MIDDLE_HEIGHT
+        -CONTROL_CYLINDER_DIAMETER - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
       ])
       rotate([0,90,0])
       cylinder(r = SELECTOR_RATCHET_GEAR_RADIUS + 0.5*mm, h = 100*cm, center = true);
@@ -759,11 +757,11 @@ module guide_frame_indexing_layer_no_screw_mounts() {
   //
     // top margin
     //
-    translate([0,0,GUIDE_FRAME_HEIGHT/2+GUIDE_FRAME_TOP_MARGIN/2])
+    translate([0,0,GUIDE_FRAME_HEIGHT/2+GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT/2])
     cube([
         GUIDE_FRAME_INDEXING_LAYER_THICKNESS,
         GUIDE_FRAME_WIDTH,
-        GUIDE_FRAME_TOP_MARGIN
+        GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ], center = true);
 
     //
@@ -781,7 +779,7 @@ module guide_frame_indexing_layer_no_screw_mounts() {
     translate([
         0,
         0,
-        GUIDE_FRAME_MIDDLE_HEIGHT/2
+        GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT/2
         + GUIDE_FRAME_HEIGHT/2
         - HEDDLE_ROD_RISE
         - HEDDLE_ROD_SEGMENT_SEPARATION
@@ -790,7 +788,7 @@ module guide_frame_indexing_layer_no_screw_mounts() {
     cube([
         GUIDE_FRAME_INDEXING_LAYER_THICKNESS,
         GUIDE_FRAME_WIDTH,
-        GUIDE_FRAME_MIDDLE_HEIGHT
+        GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ], center = true);
 
     //
@@ -815,14 +813,14 @@ module guide_frame_indexing_layer_no_screw_mounts() {
     translate([
         0,
         0,
-        -GUIDE_FRAME_BOTTOM_MARGIN/2
+        -GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT/2
         - 1.5*GUIDE_FRAME_HEIGHT
-        - GUIDE_FRAME_MIDDLE_HEIGHT
+        - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ])
     cube([
         GUIDE_FRAME_INDEXING_LAYER_THICKNESS,
         GUIDE_FRAME_WIDTH,
-        GUIDE_FRAME_BOTTOM_MARGIN
+        GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ], center = true);
 }
 
@@ -845,7 +843,7 @@ module guide_frame_indexing_layer_full_single_body() {
       0,
       0.5*GUIDE_FRAME_WIDTH + 0.5*t,
       - GUIDE_FRAME_HEIGHT
-      - GUIDE_FRAME_MIDDLE_HEIGHT
+      - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ])
     cube([GUIDE_FRAME_INDEXING_LAYER_THICKNESS, t, GUIDE_FRAME_INDEXING_LAYER_THICKNESS], center = true);
 }
@@ -874,7 +872,7 @@ module guide_frame_indexing_layer_holes() {
       0,
       0,
       - GUIDE_FRAME_HEIGHT
-      - GUIDE_FRAME_MIDDLE_HEIGHT
+      - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ]) {
       rotate([90,0,0])
       cylinder(d = INDEXING_SPRING_THREADED_INSERT_DIAMETER-1*mm, h = 100*cm, center = true);
@@ -911,7 +909,7 @@ module guide_frame_control_cylinder_sidewall_compensation() {
     translate([
       0,
       0,
-      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT
+      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ])
     cube([
       CONTROL_CYLINDER_SIDEWALL_THICKNESS,
@@ -938,7 +936,7 @@ module guide_frame_control_cylinder_bearing_holes() {
       0,
       CONTROL_CYLINDER_CENTER_OFFSET,
       - CONTROL_CYLINDER_DIAMETER
-      - GUIDE_FRAME_MIDDLE_HEIGHT
+      - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
   ])
   rotate([0,90,0])
   cylinder(r = CONTROL_CYLINDER_AXLE_RADIUS+PROCESS_DELTA, h = 100*cm, center = true);
@@ -949,7 +947,7 @@ module guide_frame_control_cylinder_bearing_body() {
     translate([
       0,
       0,
-      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT
+      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ])
     cube([
       CONTROL_CYLINDER_AXLE_LENGTH-2*GUIDE_FRAME_CONTROL_CYLINDER_BEARING_SPACING,
@@ -970,7 +968,7 @@ module guide_frame_control_cylinder_bearing(indexing_end) {
     translate([
       (indexing_end ? -1 : 1)*(0.5*CONTROL_CYLINDER_AXLE_LENGTH-0.5*GUIDE_FRAME_CONTROL_CYLINDER_BEARING_SPACING),
       0,
-      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT
+      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ])
     cube([
       GUIDE_FRAME_CONTROL_CYLINDER_BEARING_SPACING,
@@ -988,7 +986,7 @@ module pawl_guard() {
   // translate([
   //   0,
   //   -end_plate_width-18.65*mm,
-  //   -0.5*END_PLATE_HEIGHT + CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_TOP_MARGIN
+  //   -0.5*END_PLATE_HEIGHT + CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
   // ])
   // cube([END_PLATE_THICKNESS,end_plate_width,END_PLATE_HEIGHT], center=true);
 
@@ -1008,7 +1006,7 @@ module pawl_guard() {
     translate([
       0.5*END_PLATE_THICKNESS+0.5*shield_width-0.5*mm,
       CONTROL_CYLINDER_CENTER_OFFSET - 2*mm,
-      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 2*mm
+      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - 2*mm
     ])
     translate([0,0,5*mm])
     cube([shield_width, 4*cm, 1*cm], center = true);
@@ -1019,14 +1017,14 @@ module pawl_guard() {
       translate([
         0.5*END_PLATE_THICKNESS+0.5*shield_width,
         CONTROL_CYLINDER_CENTER_OFFSET,
-        -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 6*mm
+        -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - 6*mm
       ])
       cube([2*cm, 2*cm, 2*cm], center = true);
 
       translate([
         0.5*END_PLATE_THICKNESS+0.5*shield_width,
         CONTROL_CYLINDER_CENTER_OFFSET - 15.5*mm,
-        -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 1*cm - 6*mm
+        -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 1*cm - 6*mm
       ])
       rotate([45,0,0])
       cube([2*cm, 2*cm, 2*cm], center = true);
@@ -1034,7 +1032,7 @@ module pawl_guard() {
       translate([
         0.5*END_PLATE_THICKNESS+0.5*shield_width,
         CONTROL_CYLINDER_CENTER_OFFSET + 13*mm,
-        -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT + 1*cm - 4*mm
+        -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 1*cm - 4*mm
       ])
       rotate([-40,0,0])
       cube([2*cm, 2*cm, 2*cm], center = true);
@@ -1043,7 +1041,7 @@ module pawl_guard() {
     translate([
       0.5*END_PLATE_THICKNESS+0.5*shield_width,
       CONTROL_CYLINDER_CENTER_OFFSET - 7*mm,
-      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 11*mm
+      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - 11*mm
     ])
     rotate([20,0,0])
     cube([2*cm, 2*cm, 2*cm], center = true);
@@ -1051,7 +1049,7 @@ module pawl_guard() {
     translate([
       0.5*END_PLATE_THICKNESS+0.5*shield_width,
       CONTROL_CYLINDER_CENTER_OFFSET + 7*mm,
-      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_MIDDLE_HEIGHT - 11*mm
+      -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - 11*mm
     ])
     rotate([-20,0,0])
     cube([2*cm, 2*cm, 2*cm], center = true);
@@ -1060,7 +1058,7 @@ module pawl_guard() {
     translate([
       0,
       0,
-      -50*cm - CONTROL_CYLINDER_DIAMETER - GUIDE_FRAME_MIDDLE_HEIGHT + RELEASE_PAWL_GEAR_RADIUS + 0.5*mm
+      -50*cm - CONTROL_CYLINDER_DIAMETER - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + RELEASE_PAWL_GEAR_RADIUS + 0.5*mm
     ])
     cube([100*cm, 100*cm, 100*cm], center = true);
 
@@ -1070,7 +1068,7 @@ module pawl_guard() {
     translate([
       -50*cm + 0.5*END_PLATE_THICKNESS + SCREW_CLEARANCE + SELECTOR_RATCHET_GEAR_THICKNESS + 1*mm,
       CONTROL_CYLINDER_CENTER_OFFSET,
-      -CONTROL_CYLINDER_DIAMETER - GUIDE_FRAME_MIDDLE_HEIGHT
+      -CONTROL_CYLINDER_DIAMETER - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ])
     difference() {
       rotate([0,90,0])
@@ -1136,7 +1134,7 @@ module guide_frame_face_screw_holes(r) {
     + screw_hole_center_offset
     ,
     -0.5*GUIDE_FRAME_WIDTH-1*cm+l,
-    CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_TOP_MARGIN - screw_hole_center_offset
+    CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - screw_hole_center_offset
   ])
   rotate([90,0,0])
   cylinder(r = r, h = 2*cm, center = true);
@@ -1148,7 +1146,7 @@ module guide_frame_face_screw_holes(r) {
     - GUIDE_FRAME_CONTROL_CYLINDER_BEARING_SPACING
     + 0.5*guide_frame_total_thickness,
     -0.5*GUIDE_FRAME_WIDTH-1*cm+l,
-    CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_TOP_MARGIN - screw_hole_center_offset
+    CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - screw_hole_center_offset
   ])
   rotate([90,0,0])
   cylinder(r = r, h = 2*cm, center = true);
@@ -1164,7 +1162,7 @@ module guide_frame_face_screw_holes(r) {
     - GUIDE_FRAME_CONTROL_CYLINDER_BEARING_SPACING
     - screw_hole_center_offset,
     -0.5*GUIDE_FRAME_WIDTH-1*cm+l,
-    CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_TOP_MARGIN - screw_hole_center_offset
+    CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - screw_hole_center_offset
   ])
   rotate([90,0,0])
   cylinder(r = r, h = 2*cm, center = true);
@@ -1178,7 +1176,7 @@ module guide_frame_face_screw_holes(r) {
     + screw_hole_center_offset,
     -0.5*GUIDE_FRAME_WIDTH-1*cm+l,
     -CONTROL_CYLINDER_RADIUS
-    - 0.5*GUIDE_FRAME_MIDDLE_HEIGHT
+    - 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
   ])
   rotate([90,0,0])
   cylinder(r = r, h = 2*cm, center = true);
@@ -1191,7 +1189,7 @@ module guide_frame_face_screw_holes(r) {
     + 0.5*guide_frame_total_thickness,
     -0.5*GUIDE_FRAME_WIDTH-1*cm+l,
     -CONTROL_CYLINDER_RADIUS
-    - 0.5*GUIDE_FRAME_MIDDLE_HEIGHT
+    - 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
   ])
   rotate([90,0,0])
   cylinder(r = r, h = 2*cm, center = true);
@@ -1208,7 +1206,7 @@ module guide_frame_face_screw_holes(r) {
     - screw_hole_center_offset,
     -0.5*GUIDE_FRAME_WIDTH-1*cm+l,
     -CONTROL_CYLINDER_RADIUS
-    - 0.5*GUIDE_FRAME_MIDDLE_HEIGHT
+    - 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
   ])
   rotate([90,0,0])
   cylinder(r = r, h = 2*cm, center = true);
@@ -1222,8 +1220,8 @@ module guide_frame_face_screw_holes(r) {
     + screw_hole_center_offset,
     -0.5*GUIDE_FRAME_WIDTH-1*cm+l,
     -3*CONTROL_CYLINDER_RADIUS
-    - GUIDE_FRAME_MIDDLE_HEIGHT
-    - GUIDE_FRAME_BOTTOM_MARGIN
+    - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+    - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     + screw_hole_center_offset
   ])
   rotate([90,0,0])
@@ -1237,8 +1235,8 @@ module guide_frame_face_screw_holes(r) {
     + 0.5*guide_frame_total_thickness,
     -0.5*GUIDE_FRAME_WIDTH-1*cm+l,
     -3*CONTROL_CYLINDER_RADIUS
-    - GUIDE_FRAME_MIDDLE_HEIGHT
-    - GUIDE_FRAME_BOTTOM_MARGIN
+    - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+    - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     + screw_hole_center_offset
   ])
   rotate([90,0,0])
@@ -1256,8 +1254,8 @@ module guide_frame_face_screw_holes(r) {
     - screw_hole_center_offset,
     -0.5*GUIDE_FRAME_WIDTH-1*cm+l,
     -3*CONTROL_CYLINDER_RADIUS
-    - GUIDE_FRAME_MIDDLE_HEIGHT
-    - GUIDE_FRAME_BOTTOM_MARGIN
+    - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+    - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     + screw_hole_center_offset
   ])
   rotate([90,0,0])
@@ -1831,21 +1829,21 @@ module spiral_spring(cycles, stiffness, thickness, spacing) {
 // %guide_frame_holes();
 
 
-// raised = true;
-// translate([
-//   0,
-//   0,
-//   -HEDDLE_ROD_2_LENGTH
-//   + CONTROL_CYLINDER_RADIUS
-//   + GUIDE_FRAME_TOP_MARGIN
-//   + (raised ? HEDDLE_ROD_RISE : 0)
-// ])
-// // // heddle_rod();
-// heddle_rod_2();
+raised = true;
+translate([
+  0,
+  0,
+  -HEDDLE_ROD_2_LENGTH
+  + CONTROL_CYLINDER_RADIUS
+  + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+  + (raised ? HEDDLE_ROD_RISE : 0)
+])
+// heddle_rod();
+heddle_rod_2();
 
 // intersection() {
 // translate([0,-CONTROL_CYLINDER_CENTER_OFFSET,0])
-// guide_frame();
+%guide_frame();
 
 // translate([0,-23.5*mm,0])
 // guide_frame_cover(indexing_end = false);
@@ -1855,7 +1853,7 @@ module spiral_spring(cycles, stiffness, thickness, spacing) {
 //   0,
 //   0,
 //   CONTROL_CYLINDER_RADIUS
-//   + GUIDE_FRAME_TOP_MARGIN
+//   + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
 //   + HEDDLE_ROD_RISE
 //   + HEDDLE_ROD_CAP_HEIGHT
 // ])
@@ -1867,7 +1865,7 @@ module spiral_spring(cycles, stiffness, thickness, spacing) {
 //   0,
 //   0,
 //   CONTROL_CYLINDER_RADIUS
-//   + GUIDE_FRAME_TOP_MARGIN
+//   + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
 //   + HEDDLE_ROD_CAP_HEIGHT
 // ])
 // rotate([0,90,0])
@@ -1891,7 +1889,7 @@ module spiral_spring(cycles, stiffness, thickness, spacing) {
 //   0,
 //   0
 // ])
-// guide_frame_end_plate(indexing_end=true);
+// %guide_frame_end_plate(indexing_end=true);
 
 // translate([0,-1.5*cm,0*cm])
 // cube([100*cm, 3*cm, 3*cm], center = true);
@@ -1907,13 +1905,13 @@ module spiral_spring(cycles, stiffness, thickness, spacing) {
 
 // translate([-11.5*cm,0,0])
 // intersection() {
-translate([0,CONTROL_CYLINDER_CENTER_OFFSET,-CONTROL_CYLINDER_DIAMETER-GUIDE_FRAME_MIDDLE_HEIGHT])
+// translate([0,CONTROL_CYLINDER_CENTER_OFFSET,-CONTROL_CYLINDER_DIAMETER-GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
 // rotate([-8*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
-#control_cylinder(is_release_cylinder = false);
+// #control_cylinder(is_release_cylinder = false);
 
-translate([0,CONTROL_CYLINDER_CENTER_OFFSET,0])
+// translate([0,CONTROL_CYLINDER_CENTER_OFFSET,0])
 // rotate([-11*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
-#control_cylinder(is_release_cylinder = true);
+// #control_cylinder(is_release_cylinder = true);
 
 // translate([4*cm,0,0])
 // cube([2.1*cm, 10*cm, 20*cm], center = true);
