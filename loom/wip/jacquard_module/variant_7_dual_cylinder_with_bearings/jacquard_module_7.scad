@@ -41,7 +41,9 @@ HEDDLE_ROD_LENGTH = HEDDLE_ROD_BOTTOM_MARGIN +
                     HEDDLE_ROD_SEGMENT_SEPARATION +
                     HEDDLE_ROD_TOP_MARGIN +
                     2*HEDDLE_ROD_DETENT_SIZE;
-HEDDLE_ROD_2_LENGTH = 20*cm;
+HEDDLE_ROD_2_LENGTH = 15*cm;
+HEDDLE_ROD_2_RESET_BAR_WIDTH = 16*mm;
+HEDDLE_ROD_2_RESET_BAR_ENGAGE_ANGLE = -45;
 HEDDLE_ROD_CAP_WIDTH = 2*HEDDLE_ROD_WIDTH;
 HEDDLE_ROD_CAP_HEIGHT = 5*mm;
 HEDDLE_ROD_THREAD_SLOT_WIDTH = 0.5*mm;
@@ -51,6 +53,7 @@ HEDDLE_ROD_THREAD_HOLE_RADIUS = 0.5*HEDDLE_ROD_THREAD_HOLE_DIAMETER;
 HEDDLE_ROD_THREAD_SLOT_BOTTOM_MARGIN = 2*cm;
 GUIDE_FRAME_SIDEWALL_THICKNESS = 1*mm;
 GUIDE_FRAME_HOLE_THICKNESS = HEDDLE_ROD_THICKNESS + 2*PROCESS_DELTA;
+GUIDE_FRAME_HOLE_WIDTH = HEDDLE_ROD_WIDTH + 1.5*PROCESS_DELTA;
 GUIDE_FRAME_THICKNESS = GUIDE_FRAME_HOLE_THICKNESS + 2*GUIDE_FRAME_SIDEWALL_THICKNESS;
 GUIDE_FRAME_INDEXING_LAYER_THICKNESS = 1*cm;
 GUIDE_FRAME_SINGLE_SEPARATION = GUIDE_FRAME_HOLE_THICKNESS + GUIDE_FRAME_SIDEWALL_THICKNESS;
@@ -71,7 +74,7 @@ GUIDE_FRAME_FACE_SCREW_DIAMETER = 4*mm;
 GUIDE_FRAME_FACE_SCREW_RADIUS = 0.5*GUIDE_FRAME_FACE_SCREW_DIAMETER;
 GUIDE_FRAME_COVER_GAP = 1*mm;
 END_PLATE_THICKNESS = 4*mm;
-END_PLATE_HEIGHT = GUIDE_FRAME_TOTAL_HEIGHT;
+END_PLATE_HEIGHT = 4*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 3*CONTROL_CYLINDER_DIAMETER; //GUIDE_FRAME_TOTAL_HEIGHT;
 ROD_SNAP_GAP = 1*mm;
 CONTROL_CYLINDER_AXLE_LENGTH = END_PLATE_THICKNESS;
 // we add half the guide frame sidewall thickness because the control cylinder
@@ -362,7 +365,7 @@ module heddle_rod_2() {
     //
     translate([
         0,
-        HEDDLE_ROD_WIDTH/2 - HEDDLE_ROD_CAP_WIDTH/2,
+        0,
         HEDDLE_ROD_2_LENGTH
     ])
     cube([
@@ -370,18 +373,39 @@ module heddle_rod_2() {
         HEDDLE_ROD_CAP_WIDTH,
         HEDDLE_ROD_CAP_HEIGHT
     ]);
+
+    //
+    // reset bar
+    //
+    difference() {
+      translate([
+          0,
+          -HEDDLE_ROD_2_RESET_BAR_WIDTH,
+          HEDDLE_ROD_2_LENGTH + 0*mm
+      ])
+      cube([
+          HEDDLE_ROD_THICKNESS,
+          HEDDLE_ROD_2_RESET_BAR_WIDTH + HEDDLE_ROD_WIDTH,
+          HEDDLE_ROD_CAP_HEIGHT
+      ]);
+    
+      translate([0,CONTROL_CYLINDER_CENTER_OFFSET+2*mm,HEDDLE_ROD_2_LENGTH])
+      rotate([HEDDLE_ROD_2_RESET_BAR_ENGAGE_ANGLE,0,0])
+      translate([0,0,-5*cm])
+      cube([10*cm, 10*cm, 10*cm], center = true);
+    }
 }
 
 module guide_frame_control_cylinder_holes() {
   //
-  // top control cylinder
+  // release cylinder
   //
   translate([0,CONTROL_CYLINDER_CENTER_OFFSET,0])
   rotate([0,90,0])
   cylinder(r = CONTROL_CYLINDER_RADIUS+PROCESS_DELTA, h = 100*cm, center = true);
 
   //
-  // bottom control cylinder
+  // selector cylinder
   //
   translate([
       0,
@@ -391,14 +415,26 @@ module guide_frame_control_cylinder_holes() {
   ])
   rotate([0,90,0])
   cylinder(r = CONTROL_CYLINDER_RADIUS+PROCESS_DELTA, h = 100*cm, center = true);
+
+  //
+  // reset cylinder
+  //
+  translate([
+      0,
+      CONTROL_CYLINDER_CENTER_OFFSET,
+      + CONTROL_CYLINDER_DIAMETER
+      + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+  ])
+  rotate([0,90,0])
+  cylinder(r = CONTROL_CYLINDER_RADIUS+PROCESS_DELTA, h = 100*cm, center = true);
 }
 
 module guide_frame_bearing_ball_and_heddle_rod_holes() {
     l = 100*cm;
     heddle_rod_center =
       CONTROL_CYLINDER_CENTER_OFFSET
-      + CONTROL_CYLINDER_RADIUS+PROCESS_DELTA
-      + 0.5*HEDDLE_ROD_WIDTH+0.5*PROCESS_DELTA
+      + CONTROL_CYLINDER_RADIUS+1.5*PROCESS_DELTA
+      + 0.5*HEDDLE_ROD_WIDTH
       + BALL_RADIUS
       ;
     
@@ -439,14 +475,14 @@ module guide_frame_bearing_ball_and_heddle_rod_holes() {
     ])
     cube([
         GUIDE_FRAME_HOLE_THICKNESS,
-        HEDDLE_ROD_WIDTH+2*PROCESS_DELTA,
+        GUIDE_FRAME_HOLE_WIDTH,
         100*cm
     ], center = true);
 }
 
 module guide_frame_holes() {
-    guide_frame_bearing_ball_and_heddle_rod_holes();
-    guide_frame_control_cylinder_holes();
+  guide_frame_bearing_ball_and_heddle_rod_holes();
+  guide_frame_control_cylinder_holes();
 }
 
 module guide_frame_full_single_body() {
@@ -528,6 +564,14 @@ module guide_frame_full_single() {
     }
 }
 
+module guide_frame_full_single_no_heddles() {
+    difference() {
+        guide_frame_full_single_body();
+
+        guide_frame_control_cylinder_holes();
+    }
+}
+
 module guide_frame_cover_full_single() {
     difference() {
         guide_frame_full_single_body();
@@ -589,7 +633,11 @@ module guide_frame_end_plate(indexing_end) {
     collar_width = 2*cm;
     pawl_area_width = 1*cm;
     end_plate_width = GUIDE_FRAME_WIDTH+collar_width+pawl_area_width;
-    translate([0,-0.5*collar_width-0.5*pawl_area_width,-0.5*END_PLATE_HEIGHT + CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
+    translate([
+      0,
+      -0.5*collar_width-0.5*pawl_area_width,
+      0.5*END_PLATE_HEIGHT - 3*CONTROL_CYLINDER_RADIUS - 2*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+    ])
     cube([END_PLATE_THICKNESS,end_plate_width,END_PLATE_HEIGHT], center=true);
 
 
@@ -616,6 +664,25 @@ module guide_frame_end_plate(indexing_end) {
     translate([ 0
               , control_cylinder_center
               , -CONTROL_CYLINDER_RADIUS - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT - CONTROL_CYLINDER_RADIUS
+              ])
+    {
+      if (indexing_end) {
+        double_cone_reference(delta = dc_delta);
+
+        translate([0,0.5*s,0])
+        double_wedge_reference(s = s, delta = dw_delta);
+      } else {
+        rotate([0,90,0])
+        cylinder(r = CONTROL_CYLINDER_RADIUS + dc_delta, h = 10*cm, center = true);
+
+        translate([0,0.5*s,0])
+        cube([s, s, CONTROL_CYLINDER_DIAMETER + 2*dw_delta], center = true);
+      }
+    }
+
+    translate([ 0
+              , control_cylinder_center
+              , CONTROL_CYLINDER_RADIUS + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + CONTROL_CYLINDER_RADIUS
               ])
     {
       if (indexing_end) {
@@ -754,7 +821,7 @@ module guide_frame_end_plate(indexing_end) {
 }
 
 module guide_frame_indexing_layer_no_screw_mounts() {
-  //
+    //
     // top margin
     //
     translate([0,0,GUIDE_FRAME_HEIGHT/2+GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT/2])
@@ -827,7 +894,7 @@ module guide_frame_indexing_layer_no_screw_mounts() {
 module guide_frame_indexing_layer_full_single_body() {
     guide_frame_indexing_layer_no_screw_mounts();
 
-    // indexing screw mounts
+    // indexing screw mount
     t = INDEXING_SPRING_HOLE_LENGTH
       - (GUIDE_FRAME_WIDTH - CONTROL_CYLINDER_RADIUS)
       + 5*mm; // 5mm for the threaded insert
@@ -835,17 +902,40 @@ module guide_frame_indexing_layer_full_single_body() {
     translate([
       0,
       0.5*GUIDE_FRAME_WIDTH + 0.5*t,
-      0
-    ])
-    cube([GUIDE_FRAME_INDEXING_LAYER_THICKNESS, t, GUIDE_FRAME_INDEXING_LAYER_THICKNESS], center = true);
-
-    translate([
-      0,
-      0.5*GUIDE_FRAME_WIDTH + 0.5*t,
       - GUIDE_FRAME_HEIGHT
       - GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
     ])
     cube([GUIDE_FRAME_INDEXING_LAYER_THICKNESS, t, GUIDE_FRAME_INDEXING_LAYER_THICKNESS], center = true);
+}
+
+module guide_frame_reset_cylinder_brace_body() {
+  //
+  // top margin
+  //
+  translate([
+    0,
+    0,
+    0.5*GUIDE_FRAME_HEIGHT + 1.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + CONTROL_CYLINDER_DIAMETER
+  ])
+  cube([
+      GUIDE_FRAME_THICKNESS,
+      GUIDE_FRAME_WIDTH,
+      GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+  ], center = true);
+
+  //
+  // top cylinder part
+  //
+  translate([
+    0,
+    0,
+    GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + CONTROL_CYLINDER_DIAMETER
+  ])
+  cube([
+      GUIDE_FRAME_THICKNESS,
+      GUIDE_FRAME_WIDTH,
+      GUIDE_FRAME_HEIGHT
+  ], center = true);
 }
 
 module guide_frame_indexing_layer_holes() {
@@ -856,17 +946,6 @@ module guide_frame_indexing_layer_holes() {
     
     // spring holes
     l = 100*cm;
-
-    rotate([90,0,0])
-    cylinder(d = INDEXING_SPRING_THREADED_INSERT_DIAMETER-1*mm, h = 100*cm, center = true);
-    
-    translate([
-      0,
-      -0.5*l
-      + 0.5*GUIDE_FRAME_WIDTH
-      + t,
-      0])
-    cube([INDEXING_SPRING_HOLE_SIZE,l,INDEXING_SPRING_HOLE_SIZE], center = true);
 
     translate([
       0,
@@ -899,6 +978,14 @@ module guide_frame_indexing_layer() {
 module guide_frame_cover_indexing_layer() {
   difference() {
     guide_frame_indexing_layer_no_screw_mounts();
+
+    guide_frame_control_cylinder_holes();
+  }
+}
+
+module guide_frame_reset_cylinder_brace() {
+  difference() {
+    guide_frame_reset_cylinder_brace_body();
 
     guide_frame_control_cylinder_holes();
   }
@@ -1306,6 +1393,22 @@ module guide_frame() {
       translate([HEDDLE_COUNT*GUIDE_FRAME_SINGLE_SEPARATION + 0.5*GUIDE_FRAME_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS,0,0])
       guide_frame_indexing_layer();
 
+      // black space for reset cylinder brace
+      translate([-GUIDE_FRAME_THICKNESS,0,0])
+      guide_frame_full_single_no_heddles();
+
+      // non-indexing end reset cylinder brace
+      translate([-GUIDE_FRAME_THICKNESS,0,0])
+      guide_frame_reset_cylinder_brace();
+
+      // non-indexing end reset cylinder brace
+      translate([
+        (HEDDLE_COUNT-1)*GUIDE_FRAME_SINGLE_SEPARATION + GUIDE_FRAME_INDEXING_LAYER_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS,
+        0,
+        0
+      ])
+      guide_frame_reset_cylinder_brace();
+
     }
 
     guide_frame_side_screw_holes();
@@ -1481,58 +1584,36 @@ module control_cylinder_single(is_release_cylinder) {
     }
 }
 
-module control_cylinder(is_release_cylinder = false) {
-  // control discs
-  rotate([+CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
+module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) {
+  total_control_cylinder_heddle_length =
+    HEDDLE_COUNT * CONTROL_CYLINDER_LENGTH
+    + INDEXING_GEAR_THICKNESS;
+  
   difference() {
-    for (i = [1:HEDDLE_COUNT]) {
-      translate([
-          (i-1)*(GUIDE_FRAME_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS),
-          0,
-          0
-      ])
-      rotate([
-          (i-1)*CONTROL_CYLINDER_BALL_DETENT_ANGLE,
-          0,
-          0
-      ])
-      control_cylinder_single(is_release_cylinder);
-    }
+    union() {
+      // control discs
+      rotate([+CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
+      difference() {
+        for (i = [1:HEDDLE_COUNT]) {
+          translate([
+              (i-1)*(GUIDE_FRAME_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS),
+              0,
+              0
+          ])
+          rotate([
+              (i-1)*CONTROL_CYLINDER_BALL_DETENT_ANGLE,
+              0,
+              0
+          ])
+          control_cylinder_single(is_release_cylinder || is_reset_cylinder);
+        }
 
-    s = BALL_DIAMETER+PROCESS_DELTA;
-    rotate([
-          -CONTROL_CYLINDER_BALL_DETENT_ANGLE,
-          0,
-          0
-      ])
-    translate([0,CONTROL_CYLINDER_RADIUS,0])
-    scale([1,s,s])
-    rotate([45,0,0])
-    cube([
-        100*cm,1/sqrt(2),1/sqrt(2)
-    ], center = true);
-  }
-
-  // indexing disc
-  l = (HEDDLE_COUNT-1)*(GUIDE_FRAME_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS)
-      + (0.5*GUIDE_FRAME_THICKNESS - 0.5*GUIDE_FRAME_SIDEWALL_THICKNESS)
-      - 0.5*GUIDE_FRAME_SIDEWALL_THICKNESS
-      + 0.5*GUIDE_FRAME_INDEXING_LAYER_THICKNESS;
-  translate([
-      l,
-      0,
-      0
-  ])
-  difference() {
-    rotate([0,90,0])
-    cylinder(r = CONTROL_CYLINDER_RADIUS, h = INDEXING_GEAR_THICKNESS, center = true);
-
-    if (!is_release_cylinder) {
-      // indexing gear teeth
-      translate([-5*cm - 0.5*END_PLATE_THICKNESS,0,0])
-      for (i = [1:INDEXING_DETENT_COUNT]) {
         s = BALL_DIAMETER+PROCESS_DELTA;
-        rotate([(i-1)*INDEXING_DETENT_ANGLE,0,0])
+        rotate([
+              -CONTROL_CYLINDER_BALL_DETENT_ANGLE,
+              0,
+              0
+          ])
         translate([0,CONTROL_CYLINDER_RADIUS,0])
         scale([1,s,s])
         rotate([45,0,0])
@@ -1540,183 +1621,244 @@ module control_cylinder(is_release_cylinder = false) {
             100*cm,1/sqrt(2),1/sqrt(2)
         ], center = true);
       }
-    }
-  }
 
-  
-  // grooves and caps (disks and gears)
+      // indexing disc
+      l = (HEDDLE_COUNT-1)*(GUIDE_FRAME_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS)
+          + (0.5*GUIDE_FRAME_THICKNESS - 0.5*GUIDE_FRAME_SIDEWALL_THICKNESS)
+          - 0.5*GUIDE_FRAME_SIDEWALL_THICKNESS
+          + 0.5*GUIDE_FRAME_INDEXING_LAYER_THICKNESS;
+      translate([
+          l,
+          0,
+          0
+      ])
+      difference() {
+        rotate([0,90,0])
+        cylinder(r = CONTROL_CYLINDER_RADIUS, h = INDEXING_GEAR_THICKNESS, center = true);
 
-  total_control_cylinder_heddle_length =
-    HEDDLE_COUNT * CONTROL_CYLINDER_LENGTH
-    + INDEXING_GEAR_THICKNESS;
-  
-  // indexing end
-  translate([total_control_cylinder_heddle_length-0.5*CONTROL_CYLINDER_LENGTH,0,0]) {
-    // thin sidewall
-    translate([0.5*CONTROL_CYLINDER_SIDEWALL_THICKNESS,0,0])
-    rotate([0,90,0])
-    cylinder(r = CONTROL_CYLINDER_RADIUS, h = CONTROL_CYLINDER_SIDEWALL_THICKNESS, center = true);
-
-    translate([CONTROL_CYLINDER_SIDEWALL_THICKNESS, 0, 0]) {
-      // double cone axle
-      translate([0.5*CONTROL_CYLINDER_AXLE_LENGTH,0,0])
-      intersection() {
-        cube([CONTROL_CYLINDER_AXLE_LENGTH, 10*cm, 10*cm], center = true);
-        double_cone_reference();
+        if (!(is_release_cylinder || is_reset_cylinder)) {
+          // indexing gear teeth
+          translate([-5*cm - 0.5*END_PLATE_THICKNESS,0,0])
+          for (i = [1:INDEXING_DETENT_COUNT]) {
+            s = BALL_DIAMETER+PROCESS_DELTA;
+            rotate([(i-1)*INDEXING_DETENT_ANGLE,0,0])
+            translate([0,CONTROL_CYLINDER_RADIUS,0])
+            scale([1,s,s])
+            rotate([45,0,0])
+            cube([
+                100*cm,1/sqrt(2),1/sqrt(2)
+            ], center = true);
+          }
+        }
       }
 
-      // cylindrical axle
-      // translate([0.5*CONTROL_CYLINDER_AXLE_LENGTH,0,0])
-      // rotate([0,90,0])
-      // cylinder(r = CONTROL_CYLINDER_AXLE_RADIUS, h = CONTROL_CYLINDER_AXLE_LENGTH, center = true);
+      
+      // indexing end
+      translate([total_control_cylinder_heddle_length-0.5*CONTROL_CYLINDER_LENGTH,0,0]) {
+        // thin sidewall
+        translate([0.5*CONTROL_CYLINDER_SIDEWALL_THICKNESS,0,0])
+        rotate([0,90,0])
+        cylinder(r = CONTROL_CYLINDER_RADIUS, h = CONTROL_CYLINDER_SIDEWALL_THICKNESS, center = true);
 
-      // raiser disk (also for screw clearance)
-      translate([CONTROL_CYLINDER_AXLE_LENGTH + 0.5*SCREW_CLEARANCE,0,0])
-      rotate([0,90,0])
-      cylinder(r = CONTROL_CYLINDER_RADIUS, h = SCREW_CLEARANCE, center = true);
+        translate([CONTROL_CYLINDER_SIDEWALL_THICKNESS, 0, 0]) {
+          // double cone axle
+          translate([0.5*CONTROL_CYLINDER_AXLE_LENGTH,0,0])
+          intersection() {
+            cube([CONTROL_CYLINDER_AXLE_LENGTH, 10*cm, 10*cm], center = true);
+            double_cone_reference();
+          }
+
+          // cylindrical axle
+          // translate([0.5*CONTROL_CYLINDER_AXLE_LENGTH,0,0])
+          // rotate([0,90,0])
+          // cylinder(r = CONTROL_CYLINDER_AXLE_RADIUS, h = CONTROL_CYLINDER_AXLE_LENGTH, center = true);
+
+          // raiser disk (also for screw clearance)
+          translate([CONTROL_CYLINDER_AXLE_LENGTH + 0.5*SCREW_CLEARANCE,0,0])
+          rotate([0,90,0])
+          cylinder(r = CONTROL_CYLINDER_RADIUS, h = SCREW_CLEARANCE, center = true);
+        }
+      }
+
+      // non-indexing end
+      translate([-0.5*CONTROL_CYLINDER_LENGTH,0,0]) {
+        // spacer disk for reset cylinder brace
+        translate([-0.5*GUIDE_FRAME_THICKNESS,0,0])
+        rotate([0,90,0])
+        cylinder(r = CONTROL_CYLINDER_RADIUS, h = GUIDE_FRAME_THICKNESS, center = true);
+
+        // thin sidewall
+        translate([-GUIDE_FRAME_THICKNESS - 0.5*CONTROL_CYLINDER_SIDEWALL_THICKNESS,0,0])
+        rotate([0,90,0])
+        cylinder(r = CONTROL_CYLINDER_RADIUS, h = CONTROL_CYLINDER_SIDEWALL_THICKNESS, center = true);
+
+        // cylindrical axle
+        translate([-0.5*CONTROL_CYLINDER_AXLE_LENGTH - GUIDE_FRAME_THICKNESS - CONTROL_CYLINDER_SIDEWALL_THICKNESS,0,0])
+        rotate([0,90,0])
+        cylinder(r = CONTROL_CYLINDER_RADIUS, h = CONTROL_CYLINDER_AXLE_LENGTH, center = true);
+
+        // raiser disk (also for screw clearance)
+        translate([-CONTROL_CYLINDER_AXLE_LENGTH - GUIDE_FRAME_THICKNESS - CONTROL_CYLINDER_SIDEWALL_THICKNESS - 0.5*SCREW_CLEARANCE,0,0])
+        rotate([0,90,0])
+        cylinder(r = CONTROL_CYLINDER_RADIUS, h = SCREW_CLEARANCE, center = true);
+
+      }
     }
-  }
 
-  // non-indexing end
-  translate([-0.5*CONTROL_CYLINDER_LENGTH,0,0]) {
-    // thin sidewall
-    translate([-0.5*CONTROL_CYLINDER_SIDEWALL_THICKNESS,0,0])
-    rotate([0,90,0])
-    cylinder(r = CONTROL_CYLINDER_RADIUS, h = CONTROL_CYLINDER_SIDEWALL_THICKNESS, center = true);
+    if (is_reset_cylinder) {
+      lift_bar_length =
+        (HEDDLE_COUNT-1)*CONTROL_CYLINDER_LENGTH
+        + INDEXING_GEAR_THICKNESS
+        ;
 
-    translate([-CONTROL_CYLINDER_SIDEWALL_THICKNESS, 0, 0]) {
-      // double cone axle
-      translate([-0.5*CONTROL_CYLINDER_AXLE_LENGTH,0,0])
-      // intersection() {
-      //   cube([CONTROL_CYLINDER_AXLE_LENGTH, 10*cm, 10*cm], center = true);
-      //   double_cone_reference();
-      // }
-      rotate([0,90,0])
-      cylinder(r = CONTROL_CYLINDER_RADIUS, h = CONTROL_CYLINDER_AXLE_LENGTH, center = true);
-
-      // cylindrical axle
-      // translate([-0.5*CONTROL_CYLINDER_AXLE_LENGTH,0,0])
-      // rotate([0,90,0])
-      // cylinder(r = CONTROL_CYLINDER_AXLE_RADIUS, h = CONTROL_CYLINDER_AXLE_LENGTH, center = true);
-
-      // raiser disk (also for screw clearance)
-      translate([-CONTROL_CYLINDER_AXLE_LENGTH - 0.5*SCREW_CLEARANCE,0,0])
-      rotate([0,90,0])
-      cylinder(r = CONTROL_CYLINDER_RADIUS, h = SCREW_CLEARANCE, center = true);
-    }
-  }
-
-  if (is_release_cylinder) {
-      // pawl
-      rotate([-90,0,0])
       translate([
-        -0.5*CONTROL_CYLINDER_LENGTH
-        + total_control_cylinder_heddle_length
-        + CONTROL_CYLINDER_SIDEWALL_THICKNESS
-        + CONTROL_CYLINDER_AXLE_LENGTH
-        + SCREW_CLEARANCE
-        + 0.5*RELEASE_PAWL_GEAR_THICKNESS,
-        0,
+        0.5*lift_bar_length - 0.5*CONTROL_CYLINDER_LENGTH - 0.5*CONTROL_CYLINDER_SIDEWALL_THICKNESS,
+        50*cm - CONTROL_CYLINDER_RADIUS + 5*mm,
         0
-      ]) {
-        pawl_thickness = 2*mm;
-        pawl_stiffness = 0.6*mm;
-        pawl_tooth_width = 4*mm;
-        pawl_tooth_thickness = 6*mm;
-        pawl_spacing_thickness = 1*mm + pawl_tooth_thickness;
-        pawl_stiffness_spacing = 1.5*mm;
-        spring_half_cycle_length = 2.5*mm;
-        spring_width = 13*mm;
+      ])
+      cube([
+        lift_bar_length,
+        100*cm,
+        100*cm
+      ], center = true);
+    }
 
-        difference() {
-          union() {
-            difference() {
-              rotate([0,90,0])
-              cylinder(r = RELEASE_PAWL_GEAR_RADIUS, h = RELEASE_PAWL_GEAR_THICKNESS, center = true);
+  }
 
-              // translate([
-              //   -0.5*pawl_thickness + 0.5*RELEASE_PAWL_GEAR_THICKNESS,
-              //   0,
-              //   -pawl_stiffness_spacing + 0.25*mm
-              // ])
-              // rotate([90,0,0])
-              // rotate([0,90,0])
-              // flat_spring(n = 2, w = 2*cm, l = spring_half_cycle_length, t = pawl_spacing_thickness, s = 2*pawl_stiffness_spacing+pawl_stiffness);
-              
+  if (is_release_cylinder || is_reset_cylinder) {
+      // gear support
+      translate([-GUIDE_FRAME_THICKNESS-16.5*mm,0,0])
+      rotate([0,90,0])
+      linear_extrude(height = 1*cm, scale = 0.5)
+      projection(cut = true)
+      gear( radius_of_pitch_circle = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+          , number_of_teeth = 16
+          , thickness = 1*cm
+          , hole_diameter = CONTROL_CYLINDER_DIAMETER+2*mm
+          , $fn = 64
+          );
+      
+      translate([-GUIDE_FRAME_THICKNESS-21.5*mm,0,0])
+      rotate([0,90,0])
+      gear( radius_of_pitch_circle = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+          , number_of_teeth = 16
+          , thickness = 5*mm
+          , hole_diameter = CONTROL_CYLINDER_DIAMETER+2*mm
+          , $fn = 64
+          );
+
+      if (is_release_cylinder && !is_reset_cylinder) {
+        // pawl
+        rotate([90,0,0])
+        translate([
+          -0.5*CONTROL_CYLINDER_LENGTH
+          + total_control_cylinder_heddle_length
+          + CONTROL_CYLINDER_SIDEWALL_THICKNESS
+          + CONTROL_CYLINDER_AXLE_LENGTH
+          + SCREW_CLEARANCE
+          + 0.5*RELEASE_PAWL_GEAR_THICKNESS,
+          0,
+          0
+        ]) {
+          pawl_thickness = 2*mm;
+          pawl_stiffness = 0.6*mm;
+          pawl_tooth_width = 4*mm;
+          pawl_tooth_thickness = 6*mm;
+          pawl_spacing_thickness = 1*mm + pawl_tooth_thickness;
+          pawl_stiffness_spacing = 1.5*mm;
+          spring_half_cycle_length = 2.5*mm;
+          spring_width = 13*mm;
+
+          difference() {
+            union() {
+              difference() {
+                rotate([0,90,0])
+                cylinder(r = RELEASE_PAWL_GEAR_RADIUS, h = RELEASE_PAWL_GEAR_THICKNESS, center = true);
+
+                // translate([
+                //   -0.5*pawl_thickness + 0.5*RELEASE_PAWL_GEAR_THICKNESS,
+                //   0,
+                //   -pawl_stiffness_spacing + 0.25*mm
+                // ])
+                // rotate([90,0,0])
+                // rotate([0,90,0])
+                // flat_spring(n = 2, w = 2*cm, l = spring_half_cycle_length, t = pawl_spacing_thickness, s = 2*pawl_stiffness_spacing+pawl_stiffness);
+                
+                translate([
+                  0.5*RELEASE_PAWL_GEAR_THICKNESS - 0.5*pawl_spacing_thickness + 1*mm,
+                  0,
+                  0
+                ])
+                rotate([0,90,0])
+                cylinder(r = RELEASE_PAWL_GEAR_RADIUS - 2*mm, h = 10*cm, center = true);
+
+              }
+
+              brace_height = 4*mm;
               translate([
-                0.5*RELEASE_PAWL_GEAR_THICKNESS - 0.5*pawl_spacing_thickness + 1*mm,
                 0,
-                0
-              ])
-              rotate([0,90,0])
-              cylinder(r = RELEASE_PAWL_GEAR_RADIUS - 2*mm, h = 10*cm, center = true);
-
+                0,
+                RELEASE_PAWL_GEAR_RADIUS - 0.5*brace_height - 1*mm])
+              cube([
+                RELEASE_PAWL_GEAR_THICKNESS,
+                pawl_tooth_width + 3.5*mm,
+                brace_height
+              ],
+              center = true);
             }
 
-            brace_height = 4*mm;
             translate([
+              0.5*RELEASE_PAWL_GEAR_THICKNESS - 0.5*pawl_spacing_thickness + 0.5*mm,
               0,
-              0,
-              RELEASE_PAWL_GEAR_RADIUS - 0.5*brace_height - 1*mm])
+              50*mm])
             cube([
-              RELEASE_PAWL_GEAR_THICKNESS,
-              pawl_tooth_width + 3.5*mm,
-              brace_height
+              10*cm,
+              pawl_tooth_width + 1*mm,
+              10*cm
             ],
             center = true);
           }
+          
+          difference() {
+            translate([-0.5*pawl_thickness + 0.5*RELEASE_PAWL_GEAR_THICKNESS,0,0])
+            rotate([90,0,0])
+            rotate([0,90,0])
+            flat_spring(n = 2, w = spring_width, l = spring_half_cycle_length, t = pawl_thickness, s = pawl_stiffness);
 
-          translate([
-            0.5*RELEASE_PAWL_GEAR_THICKNESS - 0.5*pawl_spacing_thickness + 0.5*mm,
-            0,
-            50*mm])
-          cube([
-            10*cm,
-            pawl_tooth_width + 1*mm,
-            10*cm
-          ],
-          center = true);
-        }
-        
-        difference() {
-          translate([-0.5*pawl_thickness + 0.5*RELEASE_PAWL_GEAR_THICKNESS,0,0])
-          rotate([90,0,0])
-          rotate([0,90,0])
-          flat_spring(n = 2, w = spring_width, l = spring_half_cycle_length, t = pawl_thickness, s = pawl_stiffness);
+            translate([0,-5.1*cm,5*cm+1.5*spring_half_cycle_length])
+            cube([10*cm, 10*cm, 10*cm], center = true);
 
-          translate([0,-5.1*cm,5*cm+1.5*spring_half_cycle_length])
-          cube([10*cm, 10*cm, 10*cm], center = true);
+          }
 
-        }
+          intersection() {
+            translate([
+              0.5*RELEASE_PAWL_GEAR_THICKNESS - 0.5*pawl_thickness,
+              1*cm,
+              -2*spring_half_cycle_length
+            ])
+            cube([pawl_thickness, 2*cm, pawl_stiffness], center = true);
 
-        intersection() {
-          translate([
-            0.5*RELEASE_PAWL_GEAR_THICKNESS - 0.5*pawl_thickness,
-            1*cm,
-            -2*spring_half_cycle_length
-          ])
-          cube([pawl_thickness, 2*cm, pawl_stiffness], center = true);
-
-          rotate([0,90,0])
-          cylinder(r = RELEASE_PAWL_GEAR_RADIUS-0.1*mm, h = RELEASE_PAWL_GEAR_THICKNESS, center = true);
-        }
-        
-        difference() {
-          translate([
-            -0.5*pawl_tooth_thickness + 0.5*RELEASE_PAWL_GEAR_THICKNESS,
-            0,
-            2*spring_half_cycle_length + 0.5*RELEASE_PAWL_TOOTH_HEIGHT - 0.25*pawl_stiffness
-          ])
-          cube([pawl_tooth_thickness, pawl_tooth_width, RELEASE_PAWL_TOOTH_HEIGHT + 0.5*pawl_stiffness], center = true);
-        
-          translate([
-            -0.5*pawl_thickness + 0.5*RELEASE_PAWL_GEAR_THICKNESS,
-            -0.5*pawl_tooth_width,
-            2*spring_half_cycle_length + RELEASE_PAWL_TOOTH_HEIGHT - 2.5*mm
-          ])
-          rotate([-45,0,0])
-          translate([0,0,12*mm])
-          cube([2*cm, 2*cm, 2*cm], center = true);
+            rotate([0,90,0])
+            cylinder(r = RELEASE_PAWL_GEAR_RADIUS-0.1*mm, h = RELEASE_PAWL_GEAR_THICKNESS, center = true);
+          }
+          
+          difference() {
+            translate([
+              -0.5*pawl_tooth_thickness + 0.5*RELEASE_PAWL_GEAR_THICKNESS,
+              0,
+              2*spring_half_cycle_length + 0.5*RELEASE_PAWL_TOOTH_HEIGHT - 0.25*pawl_stiffness
+            ])
+            cube([pawl_tooth_thickness, pawl_tooth_width, RELEASE_PAWL_TOOTH_HEIGHT + 0.5*pawl_stiffness], center = true);
+          
+            translate([
+              -0.5*pawl_thickness + 0.5*RELEASE_PAWL_GEAR_THICKNESS,
+              -0.5*pawl_tooth_width,
+              2*spring_half_cycle_length + RELEASE_PAWL_TOOTH_HEIGHT - 2.5*mm
+            ])
+            rotate([-45,0,0])
+            translate([0,0,12*mm])
+            cube([2*cm, 2*cm, 2*cm], center = true);
+          }
         }
         
       }
@@ -1823,27 +1965,86 @@ module spiral_spring(cycles, stiffness, thickness, spacing) {
   }
 }
 
+module gear (
+	radius_of_pitch_circle,
+  // mm_per_tooth    = 3,    //this is the "circular pitch", the circumference of the pitch circle divided by the number of teeth
+	number_of_teeth = 11,   //total number of teeth around the entire perimeter
+	thickness       = 6,    //thickness of gear in mm
+	hole_diameter   = 3,    //diameter of the hole in the center, in mm
+	twist           = 0,    //teeth rotate this many degrees from bottom of gear to top.  360 makes the gear a screw with each thread going around once
+	teeth_to_hide   = 0,    //number of teeth to delete to make this only a fraction of a circle
+	pressure_angle  = 28,   //Controls how straight or bulged the tooth sides are. In degrees.
+	clearance       = 0.0,  //gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
+	backlash        = 0.0,   //gap between two meshing teeth, in the direction along the circumference of the pitch circle
+    center = false,   // center gear by z axis
+    $fn = 20   // number of fragments to draw hole cylinder
+) {
+  mm_per_tooth = 2*radius_of_pitch_circle*PI / number_of_teeth;
+	p  = radius_of_pitch_circle; //mm_per_tooth * number_of_teeth / PI / 2;  //radius of pitch circle
+	c  = p + mm_per_tooth / PI - clearance;        //radius of outer circle
+	b  = p*cos(pressure_angle);                    //radius of base circle
+	r  = p-(c-p)-clearance;                        //radius of root circle
+	t  = mm_per_tooth/2-backlash/2;                //tooth thickness at pitch circle
+	k  = -iang(b, p) - t/2/p/PI*180;             //angle to where involute meets base circle on each side of tooth
+    difference() {
+        linear_extrude(height = thickness, center = center, convexity = 10, twist = twist)
+            for (i = [0:(number_of_teeth-teeth_to_hide-1 > 0 ? 1 : -1):number_of_teeth-teeth_to_hide-1] )
+                rotate([0,0,i*360/number_of_teeth])
+                    polygon(
+                        points=[
+                            [0, -hole_diameter/10],
+                            polar(r, -181/number_of_teeth),
+                            polar(r, r<b ? k : -180/number_of_teeth),
+                            q7(0/5,r,b,c,k, 1),q7(1/5,r,b,c,k, 1),q7(2/5,r,b,c,k, 1),q7(3/5,r,b,c,k, 1),q7(4/5,r,b,c,k, 1),q7(5/5,r,b,c,k, 1),
+                            q7(5/5,r,b,c,k,-1),q7(4/5,r,b,c,k,-1),q7(3/5,r,b,c,k,-1),q7(2/5,r,b,c,k,-1),q7(1/5,r,b,c,k,-1),q7(0/5,r,b,c,k,-1),
+                            polar(r, r<b ? -k : 180/number_of_teeth),
+                            polar(r, 181/number_of_teeth)
+                        ],
+                        paths=[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]]
+                    );
+        translate([0,0, (center ? 0 : -0.1)])
+            cylinder(h=thickness+0.2, r=hole_diameter/2, center=center, $fn=$fn);
+    }
+};	
+//these 4 functions are used by gear
+function polar(r,theta)   = r*[sin(theta), cos(theta)];                            //convert polar to cartesian coordinates
+function iang(r1,r2)      = sqrt((r2/r1)*(r2/r1) - 1)/PI*180 - acos(r1/r2); //unwind a string this many degrees to go from radius r1 to radius r2
+function q7(f,r,b,r2,t,s) = q6(b,s,t,(1-f)*max(b,r)+f*r2);                         //radius a fraction f up the curved side of the tooth 
+function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                              //point at radius d on the involute curve              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // translate([0,-BALL_DIAMETER,0])
 // ball();
 
 // %guide_frame_holes();
 
 
-raised = true;
-translate([
-  0,
-  0,
-  -HEDDLE_ROD_2_LENGTH
-  + CONTROL_CYLINDER_RADIUS
-  + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
-  + (raised ? HEDDLE_ROD_RISE : 0)
-])
-// heddle_rod();
-heddle_rod_2();
+// raised = false;
+// translate([
+//   0,
+//   0,
+//   -HEDDLE_ROD_2_LENGTH
+//   + CONTROL_CYLINDER_RADIUS
+//   + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+//   + (raised ? HEDDLE_ROD_RISE + 2*mm: 0)
+// ])
+// heddle_rod_2();
 
 // intersection() {
 // translate([0,-CONTROL_CYLINDER_CENTER_OFFSET,0])
-%guide_frame();
+guide_frame();
 
 // translate([0,-23.5*mm,0])
 // guide_frame_cover(indexing_end = false);
@@ -1871,8 +2072,8 @@ heddle_rod_2();
 // rotate([0,90,0])
 // #cylinder(d = 0.5*mm, h = 100*cm, center = true);
 
-// translate([-0*mm,4*mm,-0*mm])
-// #cube([7*mm, 1*cm, 15*cm], center = true);
+// translate([5*mm,1*mm,-0*mm])
+// #cube([8*mm, 1*cm, 15*cm], center = true);
 // }
 
 // translate([50*mm, 0, 0])
@@ -1889,7 +2090,7 @@ heddle_rod_2();
 //   0,
 //   0
 // ])
-// %guide_frame_end_plate(indexing_end=true);
+// guide_frame_end_plate(indexing_end=false);
 
 // translate([0,-1.5*cm,0*cm])
 // cube([100*cm, 3*cm, 3*cm], center = true);
@@ -1904,17 +2105,21 @@ heddle_rod_2();
 // #cylinder(r = END_PLATE_MOUNTING_SCREW_HOLE_RADIUS, h = 10*cm, center = true);
 
 // translate([-11.5*cm,0,0])
-// intersection() {
+// #intersection() {
 // translate([0,CONTROL_CYLINDER_CENTER_OFFSET,-CONTROL_CYLINDER_DIAMETER-GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
-// rotate([-8*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
+// // rotate([-8*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
 // #control_cylinder(is_release_cylinder = false);
 
 // translate([0,CONTROL_CYLINDER_CENTER_OFFSET,0])
 // rotate([-11*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
 // #control_cylinder(is_release_cylinder = true);
 
+// translate([0,CONTROL_CYLINDER_CENTER_OFFSET,CONTROL_CYLINDER_DIAMETER+GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
+// // rotate([0,0,0])
+// #control_cylinder(is_reset_cylinder = true);
+
 // translate([4*cm,0,0])
-// cube([2.1*cm, 10*cm, 20*cm], center = true);
+// cube([1*mm, 10*cm, 20*cm], center = true);
 // }
 
 
@@ -1938,3 +2143,23 @@ heddle_rod_2();
 
 
 // spiral_spring(3, 1*mm, 4*mm, 3*mm);
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+//example gear train.  
+
+// num_teeth = 8;
+// radius = 1*cm;
+// mm_per_tooth = 2*PI*radius / num_teeth;
+// thickness    = 6;
+// hole_diameter  = 10;
+
+// translate([10*cm,0,0])
+// rotate([90,0,0])
+// gear(radius,num_teeth,thickness,hole_diameter);
+
+
+
+
+
+
+
