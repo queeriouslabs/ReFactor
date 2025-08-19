@@ -194,7 +194,7 @@ module heddle_detents_2() {
       // upper cylinder top stop position
       translate([0,0,detent_start])
       rotate([45,0,0])
-      cube([
+      #cube([
           100,
           detent_side_length,
           detent_side_length
@@ -433,7 +433,7 @@ module guide_frame_bearing_ball_and_heddle_rod_holes() {
     l = 100*cm;
     heddle_rod_center =
       CONTROL_CYLINDER_CENTER_OFFSET
-      + CONTROL_CYLINDER_RADIUS+1.5*PROCESS_DELTA
+      + CONTROL_CYLINDER_RADIUS+0.5*PROCESS_DELTA
       + 0.5*HEDDLE_ROD_WIDTH
       + BALL_RADIUS
       ;
@@ -1609,17 +1609,58 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
         }
 
         s = BALL_DIAMETER+PROCESS_DELTA;
-        rotate([
-              -CONTROL_CYLINDER_BALL_DETENT_ANGLE,
-              0,
-              0
-          ])
-        translate([0,CONTROL_CYLINDER_RADIUS,0])
-        scale([1,s,s])
-        rotate([45,0,0])
-        cube([
-            100*cm,1/sqrt(2),1/sqrt(2)
-        ], center = true);
+        if (is_release_cylinder) {
+
+          rotate([
+                -CONTROL_CYLINDER_BALL_DETENT_ANGLE,
+                0,
+                0
+            ])
+          translate([0,CONTROL_CYLINDER_RADIUS,0])
+          scale([1,s,s])
+          rotate([45,0,0])
+          cube([
+              100*cm,1/sqrt(2),1/sqrt(2)
+          ], center = true);
+
+          rotate([
+                180-CONTROL_CYLINDER_BALL_DETENT_ANGLE,
+                0,
+                0
+            ])
+          translate([0,CONTROL_CYLINDER_RADIUS,0])
+          scale([1,s,s])
+          rotate([45,0,0])
+          cube([
+              100*cm,1/sqrt(2),1/sqrt(2)
+          ], center = true);
+
+          rotate([-CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
+          difference() {
+            cube([10*cm, 10*cm, 10*cm], center = true);
+            
+            rotate([0,90,0])
+            cylinder(r = CONTROL_CYLINDER_RADIUS-0.5*s, h = 20*cm, center = true);
+
+            translate([0,0,-10*cm])
+            cube([20*cm, 20*cm, 20*cm], center = true);
+          }
+
+        } else if (!is_reset_cylinder) {
+
+          rotate([
+                -CONTROL_CYLINDER_BALL_DETENT_ANGLE,
+                0,
+                0
+            ])
+          translate([0,CONTROL_CYLINDER_RADIUS,0])
+          scale([1,s,s])
+          rotate([45,0,0])
+          cube([
+              100*cm,1/sqrt(2),1/sqrt(2)
+          ], center = true);
+
+        }
       }
 
       // indexing disc
@@ -1716,7 +1757,18 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
         50*cm - CONTROL_CYLINDER_RADIUS + 5*mm,
         0
       ])
-      cube([
+      #cube([
+        lift_bar_length,
+        100*cm,
+        100*cm
+      ], center = true);
+
+      translate([
+        0.5*lift_bar_length - 0.5*CONTROL_CYLINDER_LENGTH - 0.5*CONTROL_CYLINDER_SIDEWALL_THICKNESS,
+        0,
+        50*cm
+      ])
+      #cube([
         lift_bar_length,
         100*cm,
         100*cm
@@ -2112,7 +2164,7 @@ guide_frame();
 
 // translate([0,CONTROL_CYLINDER_CENTER_OFFSET,0])
 // rotate([-11*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
-// #control_cylinder(is_release_cylinder = true);
+// control_cylinder(is_release_cylinder = true);
 
 // translate([0,CONTROL_CYLINDER_CENTER_OFFSET,CONTROL_CYLINDER_DIAMETER+GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
 // // rotate([0,0,0])
