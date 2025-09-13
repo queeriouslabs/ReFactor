@@ -134,6 +134,8 @@ MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_WIDTH = 6*mm;
 MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS = 3*mm;
 RELEASE_CYLINDER_MOUNTING_BUFFER = 5*mm;
 RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS = 6*mm;
+NEMA_17_SIDE_LENGTH = 42.3*mm;
+NEMA_17_THICKNESS = 20*mm;
 
 
 
@@ -674,13 +676,22 @@ module motor_adaptor_plate_profile() {
   cylinder(d = 3*cm, h = 10*cm, center = true);
 }
 
-module motor_shaft_adaptor(is_servo = false) {
+module motor_shaft_adaptor(is_servo = false, is_nema_17 = false) {
   mating_gear_diameter = 5*mm;
   mating_gear_radius = 0.5*mating_gear_diameter;
   main_thickness = 2*mm;
-  shaft_radius = 4*mm;
+  motor_shaft_diameter = is_servo ? 4*mm : 5*mm;
+  adaptor_shaft_wall_thickness = is_nema_17 ? 1.5*mm : 2*mm;
+  adaptor_shaft_diameter = motor_shaft_diameter + 2*adaptor_shaft_wall_thickness;
+  adaptor_shaft_radius = 0.5*adaptor_shaft_diameter;
   mating_gear_thickness = 4*mm;
-  shaft_thickness = is_servo ? mating_gear_thickness : 25*mm;
+  shaft_thickness =
+    is_servo
+      ? mating_gear_thickness
+      : is_nema_17
+      ? 37*mm
+      : 25*mm;
+  r_flare = 3*mm;
   difference() {
     // adaptor body
     union() {
@@ -690,8 +701,23 @@ module motor_shaft_adaptor(is_servo = false) {
       }
 
       translate([0,0,0.5*shaft_thickness+0.5*main_thickness])
-      cylinder(r = shaft_radius, h = shaft_thickness, center = true);
+      cylinder(d = adaptor_shaft_diameter, h = shaft_thickness, center = true);
+
+      difference() {
+        translate([0,0,0.5*main_thickness])
+        rotate_extrude()
+        translate([adaptor_shaft_radius, 0,0])
+        circle(r = r_flare, $fn = 8);
+
+        translate([0,0,-5*cm])
+        cube([10*cm, 10*cm, 10*cm], center = true);
+      }
     }
+
+    translate([0,0,0.5*main_thickness+r_flare])
+    rotate_extrude()
+    translate([adaptor_shaft_radius+r_flare, 0,0])
+    circle(r = r_flare);
 
     if (is_servo) {
       // center screw hole
@@ -700,11 +726,17 @@ module motor_shaft_adaptor(is_servo = false) {
       // center screw head indent
       translate([0,0,-5*mm+0.5*main_thickness+shaft_thickness-mating_gear_thickness-1*mm])
       cylinder(r = mating_gear_radius, h = 1*cm, center = true);
+    } else if (is_nema_17) {
+      // shaft hole
+      translate([0,0,5*cm+0.5*main_thickness])
+      #cylinder(d = motor_shaft_diameter+0.3*PROCESS_DELTA, h = 10*cm, center = true);
+
+      cylinder(d = 1*mm, h = 10*cm, center = true);
     } else {
       // shaft hole
       translate([0,0,1*cm+25*mm+0.5*main_thickness-8*mm])
       difference() {
-        cylinder(d = 5*mm+PROCESS_DELTA, h = 2*cm, center = true);
+        cylinder(d = motor_shaft_diameter+0.5*PROCESS_DELTA, h = 2*cm, center = true);
         
         translate([0,1*cm+1.5*mm+0.5*PROCESS_DELTA,-2*cm+6*mm])
         cube([2*cm,2*cm,2*cm], center = true);
@@ -799,6 +831,149 @@ module stepper_brace() {
       );
     
     translate([-0.5*cross_bar_actual_width + screw_hole_radius + 1*mm,0,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+  }
+}
+
+module nema_17() {
+  intersection() {
+    cube
+      ( [ NEMA_17_SIDE_LENGTH
+        , NEMA_17_SIDE_LENGTH
+        , NEMA_17_THICKNESS
+        ]
+      , center = true
+      );
+    
+    rotate([0,0,45])
+    cube
+      ( [ 55*mm
+        , 55*mm
+        , 10*cm
+        ]
+      , center = true
+      );
+  }
+}
+
+module nema_17_brace() {
+  d_shaft_riser = 23*mm;
+  h_shaft_rise = 3*mm;
+  d_shaft_clearance = 10*mm;
+  screw_hole_radius = 2.5*mm;
+  screw_inset = 5.5*mm;
+  h = 5*mm;
+
+  difference() {
+    union() {
+      // square body match
+      intersection() {
+        cube
+          ( [ NEMA_17_SIDE_LENGTH
+            , NEMA_17_SIDE_LENGTH
+            , h
+            ]
+          , center = true);
+        
+        rotate([0,0,45])
+        cube([55*mm, 55*mm, 10*cm], center = true);
+      }
+      
+      // rotation stop
+      translate([0,0,1*cm-0.5*h])
+      cube
+        ( [ 12*mm
+          , 25*mm
+          , 2*cm
+          ]
+        , center = true
+        );
+    }
+
+    // shaft riser hole
+    translate([0,0,-5*cm-0.5*h+h_shaft_rise])
+    cylinder
+      ( d = d_shaft_riser
+      , h = 10*cm
+      , center = true
+      );
+    
+    intersection() {
+      translate([0,0,-5*cm-0.5*h+h_shaft_rise+0.2*mm])
+      cylinder
+        ( d = d_shaft_riser
+        , h = 10*cm
+        , center = true
+        );
+      
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+    }
+
+    intersection() {
+      translate([0,0,-5*cm-0.5*h+h_shaft_rise+0.4*mm])
+      cylinder
+        ( d = d_shaft_riser
+        , h = 10*cm
+        , center = true
+        );
+      
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+
+      rotate([0,0,60])
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+    }
+
+    intersection() {
+      translate([0,0,-5*cm-0.5*h+h_shaft_rise+0.6*mm])
+      cylinder
+        ( d = d_shaft_riser
+        , h = 10*cm
+        , center = true
+        );
+      
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+
+      rotate([0,0,60])
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+
+      rotate([0,0,-60])
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+    }
+    
+    // shaft clearance hole
+    cylinder
+      ( d = d_shaft_clearance
+      , h = 10*cm
+      , center = true
+      );
+    
+    // screw holes
+    translate([0.5*NEMA_17_SIDE_LENGTH-screw_inset,0.5*NEMA_17_SIDE_LENGTH-screw_inset,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+    
+    translate([-0.5*NEMA_17_SIDE_LENGTH+screw_inset,0.5*NEMA_17_SIDE_LENGTH-screw_inset,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+    
+    translate([0.5*NEMA_17_SIDE_LENGTH-screw_inset,-0.5*NEMA_17_SIDE_LENGTH+screw_inset,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+    
+    translate([-0.5*NEMA_17_SIDE_LENGTH+screw_inset,-0.5*NEMA_17_SIDE_LENGTH+screw_inset,0])
     #cylinder
       ( r = screw_hole_radius
       , h = 10*cm
@@ -2562,9 +2737,14 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 //   0,
 // ])
 // rotate([0,-90,0])
-motor_shaft_adaptor(is_servo = false);
+// intersection() {
+  motor_shaft_adaptor(is_nema_17 = true);
+//   cube([1*cm, 1*cm, 1*cm], center = true);
+// }
 
 // stepper_brace();
+
+// nema_17_brace();
 
 
 
