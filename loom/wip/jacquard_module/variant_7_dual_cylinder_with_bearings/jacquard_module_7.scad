@@ -728,9 +728,15 @@ module motor_shaft_adaptor(is_servo = false, is_nema_17 = false) {
       cylinder(r = mating_gear_radius, h = 1*cm, center = true);
     } else if (is_nema_17) {
       // shaft hole
-      translate([0,0,5*cm+0.5*main_thickness])
-      #cylinder(d = motor_shaft_diameter+0.3*PROCESS_DELTA, h = 10*cm, center = true);
+      difference() {
+        translate([0,0,5*cm+0.5*main_thickness])
+        #cylinder(d = motor_shaft_diameter+0.25*PROCESS_DELTA, h = 10*cm, center = true);
 
+        translate([52*mm,0,0])
+        cube([10*cm, 10*cm, 30*cm], center = true);
+      }
+
+      // air hole
       cylinder(d = 1*mm, h = 10*cm, center = true);
     } else {
       // shaft hole
@@ -2738,7 +2744,9 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 // ])
 // rotate([0,-90,0])
 // intersection() {
-  motor_shaft_adaptor(is_nema_17 = true);
+  #motor_shaft_adaptor(is_nema_17 = true);
+
+//   translate([0,0,35*mm])
 //   cube([1*cm, 1*cm, 1*cm], center = true);
 // }
 
