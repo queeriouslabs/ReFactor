@@ -126,6 +126,16 @@ RELEASE_PAWL_GEAR_DIAMETER = CONTROL_CYLINDER_DIAMETER;
 RELEASE_PAWL_GEAR_RADIUS = 0.5*RELEASE_PAWL_GEAR_DIAMETER;
 RELEASE_PAWL_THICKNESS = 1*mm;
 RELEASE_PAWL_TOOTH_HEIGHT = 11*mm;
+MOTOR_WIDTH = 12*mm;
+MOTOR_DEPTH = 22.5*mm;
+MOTOR_ADAPTOR_PLATE_SCREW_RADIUS = 2*mm;
+MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS = 10*mm;
+MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_WIDTH = 6*mm;
+MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS = 3*mm;
+RELEASE_CYLINDER_MOUNTING_BUFFER = 5*mm;
+RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS = 6*mm;
+NEMA_17_SIDE_LENGTH = 42.3*mm;
+NEMA_17_THICKNESS = 20*mm;
 
 
 
@@ -651,6 +661,333 @@ module guide_frame_end_plate_screw_holes() {
   }
 }
 
+module motor_cuff() {
+  cuff_size = 4*mm;
+  plate_size = 4*cm;
+  delta = 0.1*mm;
+  difference() {
+    cube([plate_size, plate_size, cuff_size], center = true);
+
+    cube([MOTOR_WIDTH+2*delta, MOTOR_DEPTH+2*delta, 10*cm], center = true);
+  }
+}
+
+module motor_adaptor_plate_profile() {
+  cylinder(d = 3*cm, h = 10*cm, center = true);
+}
+
+module motor_shaft_adaptor(is_servo = false, is_nema_17 = false) {
+  mating_gear_diameter = 5*mm;
+  mating_gear_radius = 0.5*mating_gear_diameter;
+  main_thickness = 2*mm;
+  motor_shaft_diameter = is_servo ? 4*mm : 5*mm;
+  adaptor_shaft_wall_thickness = is_nema_17 ? 1.5*mm : 2*mm;
+  adaptor_shaft_diameter = motor_shaft_diameter + 2*adaptor_shaft_wall_thickness;
+  adaptor_shaft_radius = 0.5*adaptor_shaft_diameter;
+  mating_gear_thickness = 4*mm;
+  shaft_thickness =
+    is_servo
+      ? mating_gear_thickness
+      : is_nema_17
+      ? 37*mm
+      : 25*mm;
+  r_flare = 3*mm;
+  difference() {
+    // adaptor body
+    union() {
+      intersection() {
+        motor_adaptor_plate_profile();
+        cube([10*cm, 10*cm, main_thickness], center = true);
+      }
+
+      translate([0,0,0.5*shaft_thickness+0.5*main_thickness])
+      cylinder(d = adaptor_shaft_diameter, h = shaft_thickness, center = true);
+
+      difference() {
+        translate([0,0,0.5*main_thickness])
+        rotate_extrude()
+        translate([adaptor_shaft_radius, 0,0])
+        circle(r = r_flare, $fn = 8);
+
+        translate([0,0,-5*cm])
+        cube([10*cm, 10*cm, 10*cm], center = true);
+      }
+    }
+
+    translate([0,0,0.5*main_thickness+r_flare])
+    rotate_extrude()
+    translate([adaptor_shaft_radius+r_flare, 0,0])
+    circle(r = r_flare);
+
+    if (is_servo) {
+      // center screw hole
+      cylinder(r = 1*mm, h = 1*cm, center = true);
+
+      // center screw head indent
+      translate([0,0,-5*mm+0.5*main_thickness+shaft_thickness-mating_gear_thickness-1*mm])
+      cylinder(r = mating_gear_radius, h = 1*cm, center = true);
+    } else if (is_nema_17) {
+      // shaft hole
+      difference() {
+        translate([0,0,5*cm+0.5*main_thickness])
+        #cylinder(d = motor_shaft_diameter+0.25*PROCESS_DELTA, h = 10*cm, center = true);
+
+        translate([52*mm,0,0])
+        cube([10*cm, 10*cm, 30*cm], center = true);
+      }
+
+      // air hole
+      cylinder(d = 1*mm, h = 10*cm, center = true);
+    } else {
+      // shaft hole
+      translate([0,0,1*cm+25*mm+0.5*main_thickness-8*mm])
+      difference() {
+        cylinder(d = motor_shaft_diameter+0.5*PROCESS_DELTA, h = 2*cm, center = true);
+        
+        translate([0,1*cm+1.5*mm+0.5*PROCESS_DELTA,-2*cm+6*mm])
+        cube([2*cm,2*cm,2*cm], center = true);
+
+        translate([0,-1*cm-1.5*mm-0.5*PROCESS_DELTA,-2*cm+6*mm])
+        cube([2*cm,2*cm,2*cm], center = true);
+      }
+    }
+
+    // arm screw holes
+    translate([MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS,0,0])
+    cylinder(r = MOTOR_ADAPTOR_PLATE_SCREW_RADIUS, h = 1*cm, center = true);
+
+    translate([-MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS,0,0])
+    cylinder(r = MOTOR_ADAPTOR_PLATE_SCREW_RADIUS, h = 1*cm, center = true);
+
+    translate([0,MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS,0])
+    cylinder(r = MOTOR_ADAPTOR_PLATE_SCREW_RADIUS, h = 1*cm, center = true);
+
+    translate([0,-MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS,0])
+    cylinder(r = MOTOR_ADAPTOR_PLATE_SCREW_RADIUS, h = 1*cm, center = true);
+
+    if (is_servo) {
+      // mating gear
+      translate([0,0,5*mm+0.5*main_thickness+shaft_thickness-mating_gear_thickness])
+      difference() {
+        cylinder(r = mating_gear_radius, h = 1*cm, center = true);
+
+        count = 21;
+        for (i = [0:count-1]) {
+          rotate([0,0,i*360/count])
+          translate([mating_gear_radius+0.5*sqrt(2)*cm-0.3*mm,0,0])
+          rotate([0,0,45])
+          cube([1*cm, 1*cm, 20*cm], center = true);
+        }
+      }
+    }
+  }
+}
+
+module stepper_brace() {
+  d_body = 28*mm;
+  d_shaft_riser = 10*mm;
+  cross_bar_actual_width = 42*mm;
+  cross_bar_actual_height = 7*mm;
+  center_shaft_riser = 0.5*d_shaft_riser + 0.5*cross_bar_actual_height;
+  screw_hole_radius = 2*mm;
+  h = 5*mm;
+  difference() {
+    union() {
+      // circular body match
+      cylinder
+        ( d = d_body
+        , h = h
+        , center = true
+        );
+      
+      // screw mount cross bar minimum
+      cube
+        ( [ cross_bar_actual_width + 3*mm
+          , cross_bar_actual_height +4*mm
+          , h
+          ]
+        , center = true
+        );
+      
+      // rotation stop
+      translate([0,0,1*cm-0.5*h])
+      cube
+        ( [ 12*mm
+          , 20*mm
+          , 2*cm
+          ]
+        , center = true
+        );
+    }
+
+    // shaft riser hole
+    translate([0,center_shaft_riser,0])
+    cylinder
+      ( d = d_shaft_riser
+      , h = 10*cm
+      , center = true
+      );
+    
+    // screw holes
+    translate([0.5*cross_bar_actual_width - screw_hole_radius - 1*mm,0,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+    
+    translate([-0.5*cross_bar_actual_width + screw_hole_radius + 1*mm,0,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+  }
+}
+
+module nema_17() {
+  intersection() {
+    cube
+      ( [ NEMA_17_SIDE_LENGTH
+        , NEMA_17_SIDE_LENGTH
+        , NEMA_17_THICKNESS
+        ]
+      , center = true
+      );
+    
+    rotate([0,0,45])
+    cube
+      ( [ 55*mm
+        , 55*mm
+        , 10*cm
+        ]
+      , center = true
+      );
+  }
+}
+
+module nema_17_brace() {
+  d_shaft_riser = 23*mm;
+  h_shaft_rise = 3*mm;
+  d_shaft_clearance = 10*mm;
+  screw_hole_radius = 2.5*mm;
+  screw_inset = 5.5*mm;
+  h = 5*mm;
+
+  difference() {
+    union() {
+      // square body match
+      intersection() {
+        cube
+          ( [ NEMA_17_SIDE_LENGTH
+            , NEMA_17_SIDE_LENGTH
+            , h
+            ]
+          , center = true);
+        
+        rotate([0,0,45])
+        cube([55*mm, 55*mm, 10*cm], center = true);
+      }
+      
+      // rotation stop
+      translate([0,0,1*cm-0.5*h])
+      cube
+        ( [ 12*mm
+          , 25*mm
+          , 2*cm
+          ]
+        , center = true
+        );
+    }
+
+    // shaft riser hole
+    translate([0,0,-5*cm-0.5*h+h_shaft_rise])
+    cylinder
+      ( d = d_shaft_riser
+      , h = 10*cm
+      , center = true
+      );
+    
+    intersection() {
+      translate([0,0,-5*cm-0.5*h+h_shaft_rise+0.2*mm])
+      cylinder
+        ( d = d_shaft_riser
+        , h = 10*cm
+        , center = true
+        );
+      
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+    }
+
+    intersection() {
+      translate([0,0,-5*cm-0.5*h+h_shaft_rise+0.4*mm])
+      cylinder
+        ( d = d_shaft_riser
+        , h = 10*cm
+        , center = true
+        );
+      
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+
+      rotate([0,0,60])
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+    }
+
+    intersection() {
+      translate([0,0,-5*cm-0.5*h+h_shaft_rise+0.6*mm])
+      cylinder
+        ( d = d_shaft_riser
+        , h = 10*cm
+        , center = true
+        );
+      
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+
+      rotate([0,0,60])
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+
+      rotate([0,0,-60])
+      cube([d_shaft_clearance,10*cm,10*cm], center = true);
+    }
+    
+    // shaft clearance hole
+    cylinder
+      ( d = d_shaft_clearance
+      , h = 10*cm
+      , center = true
+      );
+    
+    // screw holes
+    translate([0.5*NEMA_17_SIDE_LENGTH-screw_inset,0.5*NEMA_17_SIDE_LENGTH-screw_inset,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+    
+    translate([-0.5*NEMA_17_SIDE_LENGTH+screw_inset,0.5*NEMA_17_SIDE_LENGTH-screw_inset,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+    
+    translate([0.5*NEMA_17_SIDE_LENGTH-screw_inset,-0.5*NEMA_17_SIDE_LENGTH+screw_inset,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+    
+    translate([-0.5*NEMA_17_SIDE_LENGTH+screw_inset,-0.5*NEMA_17_SIDE_LENGTH+screw_inset,0])
+    #cylinder
+      ( r = screw_hole_radius
+      , h = 10*cm
+      , center = true
+      );
+  }
+}
+
 module guide_frame_end_plate(indexing_end) {
   control_cylinder_center = 0; //-0.5*GUIDE_FRAME_WIDTH;
 
@@ -841,6 +1178,87 @@ module guide_frame_end_plate(indexing_end) {
       ])
       rotate([-4,0,0])
       cube([10*cm,1*cm,10*cm], center = true);
+    }
+  } else {
+    w = 35*mm;
+    r = 2*mm;
+    clearance = 47*mm;
+    ch = 52*mm;
+    brace_size = ch - clearance - 2*mm;
+
+    difference() {
+      r2 = 0.5*w + 7*mm;
+
+      union() {
+        difference() {
+          
+          translate([-0.5*ch-0.5*END_PLATE_THICKNESS,-10*mm,0])
+          cube([
+            ch,
+            0.5*w + 22.5*mm,
+            MOTOR_WIDTH + 20*mm
+          ], center = true);
+
+          translate([5*cm - ch - 0.5*END_PLATE_THICKNESS + brace_size,0,0])
+          rotate([0,90,0])
+          cylinder(r = r2, h = 10*cm, center = true);
+
+        }
+
+        intersection() {
+          translate([-0.5*ch-0.5*END_PLATE_THICKNESS,-10*mm,0])
+          cube([
+            ch,
+            0.5*w + 22.5*mm,
+            MOTOR_WIDTH + 20*mm
+          ], center = true);
+        
+          translate([-ch+brace_size-0.5*END_PLATE_THICKNESS,0,0])
+          rotate([0,90,0])
+          rotate_extrude()
+          translate([r2, 0, 0])
+          circle(r = 2*mm, $fn = 16);
+        }
+
+        intersection() {
+          translate([-0.5*ch-0.5*END_PLATE_THICKNESS,-10*mm,0])
+          cube([
+            ch,
+            0.5*w + 22.5*mm,
+            MOTOR_WIDTH + 20*mm
+          ], center = true);
+        
+          translate([-0.5*END_PLATE_THICKNESS,0,0])
+          rotate([0,90,0])
+          rotate_extrude()
+          translate([r2, 0, 0])
+          circle(r = 2*mm, $fn = 16);
+        }
+      }
+
+      translate([-ch+brace_size-0.5*END_PLATE_THICKNESS+2*mm,0,0])
+      rotate([0,90,0])
+      rotate_extrude()
+      translate([r2-2*mm, 0, 0])
+      circle(r = 2*mm);
+
+      translate([-0.5*END_PLATE_THICKNESS-2*mm,0,0])
+      rotate([0,90,0])
+      rotate_extrude()
+      translate([r2-2*mm, 0, 0])
+      circle(r = 2*mm);
+      
+      cube([100*cm, w, MOTOR_WIDTH], center = true);
+
+      cube([100*cm, w+2*r, MOTOR_WIDTH-2*r], center = true);
+
+      translate([0,-0.5*w,0.5*MOTOR_WIDTH-r])
+      rotate([0,90,0])
+      cylinder(r = r, h = 100*cm, center = true);
+
+      translate([0,-0.5*w,-0.5*MOTOR_WIDTH+r])
+      rotate([0,90,0])
+      cylinder(r = r, h = 100*cm, center = true);
     }
   }
 }
@@ -1604,6 +2022,90 @@ module control_cylinder_single(is_release_cylinder) {
     }
 }
 
+module motor_mount_release_cylinder_screw_holes() {
+  // translate([-15,0,0])
+  union() {
+    translate([
+      0,
+      MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS,
+      -5*cm-0.5*RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS+15*mm
+    ])
+    cylinder(r = MOTOR_ADAPTOR_PLATE_SCREW_RADIUS, h = 10*cm, center = true);
+
+    translate([
+      0,
+      -MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS,
+      -5*cm-0.5*RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS+15*mm
+    ])
+    cylinder(r = MOTOR_ADAPTOR_PLATE_SCREW_RADIUS, h = 10*cm, center = true);
+
+    translate([
+      MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS,
+      0,
+      -5*cm-0.5*RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS+15*mm
+    ])
+    cylinder(r = MOTOR_ADAPTOR_PLATE_SCREW_RADIUS, h = 10*cm, center = true);
+
+    translate([
+      -MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS,
+      0,
+      -5*cm-0.5*RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS+15*mm
+    ])
+    cylinder(r = MOTOR_ADAPTOR_PLATE_SCREW_RADIUS, h = 10*cm, center = true);
+  }
+}
+
+module motor_mount_release_cylinder_nut_holes() {
+  l = MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS + 5*mm;
+
+  translate([
+    0,
+    0.5*l,
+    0
+  ])
+  cube([
+    MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_WIDTH,
+    l,
+    MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS
+  ], center = true);
+
+  rotate([0,0,90])
+  translate([
+    0,
+    0.5*l,
+    0
+  ])
+  cube([
+    MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_WIDTH,
+    l,
+    MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS
+  ], center = true);
+
+  rotate([0,0,180])
+  translate([
+    0,
+    0.5*l,
+    0
+  ])
+  cube([
+    MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_WIDTH,
+    l,
+    MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS
+  ], center = true);
+
+  rotate([0,0,270])
+  translate([
+    0,
+    0.5*l,
+    0
+  ])
+  cube([
+    MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_WIDTH,
+    l,
+    MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS
+  ], center = true);
+}
+
 module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) {
   total_control_cylinder_heddle_length =
     HEDDLE_COUNT * CONTROL_CYLINDER_LENGTH
@@ -1808,6 +2310,11 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
   }
 
   if (is_release_cylinder || is_reset_cylinder) {
+      hole_diameter =
+        is_reset_cylinder
+          ? CONTROL_CYLINDER_DIAMETER+2*mm
+          : 10*mm;
+      
       // gear support
       translate([-GUIDE_FRAME_THICKNESS-16.5*mm,0,0])
       rotate([0,90,0])
@@ -1816,20 +2323,50 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
       gear( radius_of_pitch_circle = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
           , number_of_teeth = 16
           , thickness = 1*cm
-          , hole_diameter = CONTROL_CYLINDER_DIAMETER+2*mm
+          , hole_diameter = hole_diameter
           , $fn = 64
           );
       
-      translate([-GUIDE_FRAME_THICKNESS-21.5*mm,0,0])
-      rotate([0,90,0])
-      gear( radius_of_pitch_circle = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
-          , number_of_teeth = 16
-          , thickness = 5*mm
-          , hole_diameter = CONTROL_CYLINDER_DIAMETER+2*mm
-          , $fn = 64
-          );
+      mounting_buffer =
+        is_reset_cylinder
+          ? 0*mm
+          : RELEASE_CYLINDER_MOUNTING_BUFFER;
+      
+      difference() {
+        translate([-GUIDE_FRAME_THICKNESS-mounting_buffer-21.5*mm,0,0])
+        rotate([0,90,0])
+        gear( radius_of_pitch_circle = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
+            , number_of_teeth = 16
+            , thickness = 5*mm + mounting_buffer
+            , hole_diameter = hole_diameter
+            , $fn = 64
+            );
+        
+        translate([-GUIDE_FRAME_THICKNESS-mounting_buffer-21.5*mm-0.5*RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS,0,0])
+        rotate([0,90,0])
+        motor_mount_release_cylinder_screw_holes();
+      }
 
-      if (is_release_cylinder && !is_reset_cylinder) {
+      if (!is_reset_cylinder) {
+        // mounting plate
+        translate([-GUIDE_FRAME_THICKNESS-mounting_buffer-21.5*mm-0.5*RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS,0,0])
+        rotate([0,90,0])
+        difference() {
+          cylinder(
+            r = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 2*mm,
+            h = RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS,
+            center = true);
+
+          cylinder(
+            r = 0.5*hole_diameter,
+            h = 10*cm,
+            center = true);
+
+          motor_mount_release_cylinder_screw_holes();
+
+          motor_mount_release_cylinder_nut_holes();
+        }
+
         // pawl
         rotate([90,0,0])
         translate([
@@ -2146,6 +2683,14 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 //   0,
 //   0
 // ])
+// translate([
+//   -11*mm,
+//   0,
+//   0
+// ])
+// guide_frame_end_plate(indexing_end=false);
+
+
 // guide_frame_end_plate(indexing_end=true);
 
 // translate([0,-1.5*cm,0*cm])
@@ -2164,10 +2709,10 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 
 // translate([0,CONTROL_CYLINDER_CENTER_OFFSET,CONTROL_CYLINDER_DIAMETER+GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
 // // rotate([0,0,0])
-#control_cylinder(is_reset_cylinder = true);
+// #control_cylinder(is_reset_cylinder = true);
 
-// translate([17*mm,0,0])
-// #cube([12*mm, 10*cm, 20*cm], center = true);
+// translate([-25*mm,0,0])
+// #cube([50*mm, 10*cm, 10*cm], center = true);
 // }
 
 
@@ -2191,6 +2736,25 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 
 
 // spiral_spring(3, 1*mm, 4*mm, 3*mm);
+
+// translate([
+//   -39.6*mm,
+//   0,
+//   0,
+// ])
+// rotate([0,-90,0])
+// intersection() {
+  #motor_shaft_adaptor(is_nema_17 = true);
+
+//   translate([0,0,35*mm])
+//   cube([1*cm, 1*cm, 1*cm], center = true);
+// }
+
+// stepper_brace();
+
+// nema_17_brace();
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //example gear train.  
