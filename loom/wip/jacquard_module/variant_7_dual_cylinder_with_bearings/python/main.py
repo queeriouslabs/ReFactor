@@ -22,33 +22,39 @@ def multistep(count, direction):
     step(direction)
 
 
-RELEASE_CYLINDER_POSITION_COUNT = 20
+RELEASE_CYLINDER_POSITION_COUNT = 21
+TOTAL_STEPS = 200
 
 def advance_release_cylinder():
-  multistep(count = 50, direction = 'ccw')
-  multistep(count = 50, direction = 'cw')
+  release_steps = (1/6) * TOTAL_STEPS
+  multistep(count = release_steps, direction = 'ccw')
+  multistep(count = release_steps, direction = 'cw')
 
 def release_current_heddle():
   multistep(count = 30, direction = 'cw')
   multistep(count = 30, direction = 'ccw')
 
 def reset_heddles():
-  for _ in range(200):
-    step(direction = 'cw')
+  multistep(count = 203, direction = 'cw')
 
 def set_heddles(bits):
   for _, bit in enumerate(bits):
-    advance_release_cylinder()
+    advance_release_cylinder() # move to next heddle
     if bit == 0:
       release_current_heddle()
+
+  advance_release_cylinder() # move to reset position
 
 def test_release_cylinder_full_cycle():
   for _ in range(RELEASE_CYLINDER_POSITION_COUNT):
     advance_release_cylinder()
 
 def test_heddle_sequence():
-  for _ in range(2):
-    set_heddles([1,0,1,0,1] + 15*[1])
+  for _ in range(1):
+    pattern = [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]
+    set_heddles(pattern)
+    time.sleep(0.5)
     reset_heddles()
-    set_heddles([0,1,0,1,0] + 15*[1])
+    set_heddles([ 1-b for b in pattern ])
+    time.sleep(0.5)
     reset_heddles()
