@@ -50,11 +50,11 @@ HEDDLE_ROD_2_RESET_BAR_WIDTH = 15*mm;
 HEDDLE_ROD_2_RESET_BAR_ENGAGE_ANGLE = -45;
 HEDDLE_ROD_CAP_WIDTH = 2*HEDDLE_ROD_WIDTH;
 HEDDLE_ROD_CAP_HEIGHT = 5*mm;
-HEDDLE_ROD_THREAD_SLOT_WIDTH = 0.5*mm;
-HEDDLE_ROD_THREAD_SLOT_LENGTH = 1*cm;
-HEDDLE_ROD_THREAD_HOLE_DIAMETER = 2*mm;
+HEDDLE_ROD_THREAD_SLOT_WIDTH = 0.4*mm;
+HEDDLE_ROD_THREAD_SLOT_LENGTH = 5*mm;
+HEDDLE_ROD_THREAD_HOLE_DIAMETER = 3*mm;
 HEDDLE_ROD_THREAD_HOLE_RADIUS = 0.5*HEDDLE_ROD_THREAD_HOLE_DIAMETER;
-HEDDLE_ROD_THREAD_SLOT_BOTTOM_MARGIN = 2*cm;
+HEDDLE_ROD_THREAD_SLOT_BOTTOM_MARGIN = HEDDLE_ROD_THREAD_HOLE_RADIUS + 2*mm;
 INDEXING_DETENT_COUNT = max(MAX_HEDDLE_COUNT, 1+HEDDLE_COUNT); //HEDDLE_COUNT + 1;
 INDEXING_DETENT_ANGLE = 360/max(MAX_HEDDLE_COUNT, 1+HEDDLE_COUNT); //CONTROL_CYLINDER_BALL_DETENT_ANGLE;
 INDEXING_SPRING_DIAMETER = 4*mm;
@@ -88,6 +88,15 @@ GUIDE_FRAME_FACE_SCREW_THREADED_INSERT_RADIUS = 0.5*GUIDE_FRAME_FACE_SCREW_THREA
 GUIDE_FRAME_FACE_SCREW_DIAMETER = 4*mm;
 GUIDE_FRAME_FACE_SCREW_RADIUS = 0.5*GUIDE_FRAME_FACE_SCREW_DIAMETER;
 GUIDE_FRAME_COVER_GAP = 1*mm;
+GUIDE_FRAME_TOTAL_THICKNESS_NO_BEARINGS
+  = HEDDLE_COUNT*(GUIDE_FRAME_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS)
+  + GUIDE_FRAME_INDEXING_LAYER_THICKNESS
+  - GUIDE_FRAME_THICKNESS
+  ;
+GUIDE_FRAME_TOTAL_THICKNESS_WITH_BEARINGS
+  = GUIDE_FRAME_TOTAL_THICKNESS_NO_BEARINGS
+  + 2*GUIDE_FRAME_THICKNESS
+  ;
 END_PLATE_THICKNESS = 4*mm;
 END_PLATE_HEIGHT = 4*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 3*CONTROL_CYLINDER_DIAMETER; //GUIDE_FRAME_TOTAL_HEIGHT;
 ROD_SNAP_GAP = 1*mm;
@@ -118,7 +127,7 @@ END_PLATE_MOUNTING_THREADED_INSERT_RADIUS = 2.5*mm;
 SCREW_CLEARANCE = 4*mm;
 INDEXING_GEAR_THICKNESS = GUIDE_FRAME_INDEXING_LAYER_THICKNESS - GUIDE_FRAME_SIDEWALL_THICKNESS; //2*END_PLATE_THICKNESS;
 SELECTOR_RATCHET_GEAR_THICKNESS = 6*mm;
-SELECTOR_RATCHET_GEAR_RADIUS = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 5*mm;
+SELECTOR_RATCHET_GEAR_RADIUS = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 3*mm;
 SELECTOR_RATCHET_GEAR_DIAMETER = 2*SELECTOR_RATCHET_GEAR_RADIUS;
 SELECTOR_RATCHET_TOOTH_DEPTH = 3*mm;
 SELECTOR_RATCHET_TOOTH_ANGLE = 37;
@@ -126,17 +135,26 @@ RELEASE_PAWL_GEAR_THICKNESS = 7*mm;
 RELEASE_PAWL_GEAR_DIAMETER = CONTROL_CYLINDER_DIAMETER;
 RELEASE_PAWL_GEAR_RADIUS = 0.5*RELEASE_PAWL_GEAR_DIAMETER;
 RELEASE_PAWL_THICKNESS = 1*mm;
-RELEASE_PAWL_TOOTH_HEIGHT = 11*mm;
+RELEASE_PAWL_TOOTH_HEIGHT = 12*mm;
 MOTOR_WIDTH = 12*mm;
 MOTOR_DEPTH = 22.5*mm;
 MOTOR_ADAPTOR_PLATE_SCREW_RADIUS = 2*mm;
 MOTOR_ADAPTOR_PLATE_SCREW_OFFSET_RADIUS = 10*mm;
 MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_WIDTH = 6*mm;
-MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS = 3*mm;
+MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS = 2.9*mm;
 RELEASE_CYLINDER_MOUNTING_BUFFER = 5*mm;
 RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS = 6*mm;
 NEMA_17_SIDE_LENGTH = 42.3*mm;
 NEMA_17_THICKNESS = 20*mm;
+FRAME_STOCK_SIZE = 15*mm;
+FRAME_SLOT_SIZE = 3*mm;
+THREAD_GUIDE_LENGTH = 13*cm;
+THREAD_GUIDE_RADIUS = 3*cm;
+THREAD_GUIDE_WALL_SIZE = 5*mm;
+RAPIER_SIZE = 1*cm;
+HEDDLE_WIDTH = RAPIER_SIZE + 1*cm;
+HEDDLE_HEIGHT = 7*cm;
+HEDDLE_THICKNESS = 1*mm;
 
 
 
@@ -337,12 +355,12 @@ module heddle_thread_slot() {
   rotate([45,0,0])
   cube([100,1,1], center = true);
 
-  translate([
-    0,
-    0.5*HEDDLE_ROD_WIDTH,
-    0.5*HEDDLE_ROD_THREAD_SLOT_LENGTH
-  ])
-  cube([100,HEDDLE_ROD_THREAD_SLOT_WIDTH,HEDDLE_ROD_THREAD_SLOT_LENGTH], center = true);
+  // translate([
+  //   0,
+  //   0.5*HEDDLE_ROD_WIDTH,
+  //   0.5*HEDDLE_ROD_THREAD_SLOT_LENGTH
+  // ])
+  // cube([100,HEDDLE_ROD_THREAD_SLOT_WIDTH,HEDDLE_ROD_THREAD_SLOT_LENGTH], center = true);
 }
 
 module heddle_rod() {
@@ -1089,7 +1107,7 @@ module guide_frame_end_plate(indexing_end) {
         -CONTROL_CYLINDER_RADIUS-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 1*cm
       ])
       rotate([-50,0,0])
-      cube([shield_width, 3.5*cm, 2*cm], center = true);
+      #cube([shield_width, 3.5*cm, 2*cm], center = true);
 
       // inner profile
       
@@ -2310,12 +2328,7 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
 
   }
 
-  if (is_release_cylinder || is_reset_cylinder) {
-      hole_diameter =
-        is_reset_cylinder
-          ? CONTROL_CYLINDER_DIAMETER+2*mm
-          : 10*mm;
-      
+  if (is_release_cylinder || is_reset_cylinder) {    
       // gear support
       translate([-GUIDE_FRAME_THICKNESS-16.5*mm,0,0])
       rotate([0,90,0])
@@ -2324,7 +2337,7 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
       gear( radius_of_pitch_circle = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
           , number_of_teeth = 16
           , thickness = 1*cm
-          , hole_diameter = hole_diameter
+          , hole_diameter = 0
           , $fn = 64
           );
       
@@ -2339,13 +2352,15 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
         gear( radius_of_pitch_circle = CONTROL_CYLINDER_RADIUS + 0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
             , number_of_teeth = 16
             , thickness = 5*mm + mounting_buffer
-            , hole_diameter = hole_diameter
+            , hole_diameter = 0
             , $fn = 64
             );
         
-        translate([-GUIDE_FRAME_THICKNESS-mounting_buffer-21.5*mm-0.5*RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS,0,0])
-        rotate([0,90,0])
-        motor_mount_release_cylinder_screw_holes();
+        if (!is_reset_cylinder) {
+          translate([-GUIDE_FRAME_THICKNESS-mounting_buffer-21.5*mm-0.5*RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS,0,0])
+          rotate([0,90,0])
+          motor_mount_release_cylinder_screw_holes();
+        }
       }
 
       if (!is_reset_cylinder) {
@@ -2358,8 +2373,17 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
             h = RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS,
             center = true);
 
+          translate
+            ( [ 0
+              , 0
+              , -5*cm
+                - 0.5*RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS
+                + MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS
+                + 0.5*(RELEASE_CYLINDER_MOUNTING_PLATE_THICKNESS - MOTOR_ADAPTOR_PLATE_SCREW_NUT_SLOT_THICKNESS)
+              ]
+            )
           cylinder(
-            r = 0.5*hole_diameter,
+            r = 5*mm, //0.5*hole_diameter,
             h = 10*cm,
             center = true);
 
@@ -2501,7 +2525,7 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
       // ratchet teeth
       for (i = [0:HEDDLE_COUNT]) {
         s = 2*cm;
-        rotate([(i-1)*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
+        rotate([7+(i-1)*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
         translate([0,SELECTOR_RATCHET_GEAR_RADIUS - SELECTOR_RATCHET_TOOTH_DEPTH,0])
         rotate([SELECTOR_RATCHET_TOOTH_ANGLE,0,0])
         translate([0,s,0])
@@ -2512,6 +2536,188 @@ module control_cylinder(is_release_cylinder = false, is_reset_cylinder = false) 
         ], center = true);
       }
     }
+  }
+}
+
+module thread_guide() {
+  difference() {
+    union() {
+      translate([0,0,0.5*THREAD_GUIDE_LENGTH])
+      cylinder
+        ( r = THREAD_GUIDE_RADIUS
+        , h = THREAD_GUIDE_LENGTH - 2*THREAD_GUIDE_WALL_SIZE
+        , center = true
+        );
+      
+      translate([0,0,0.5*THREAD_GUIDE_WALL_SIZE])
+      cylinder
+        ( r1 = THREAD_GUIDE_RADIUS + THREAD_GUIDE_WALL_SIZE
+        , r2 = THREAD_GUIDE_RADIUS
+        , h = THREAD_GUIDE_WALL_SIZE
+        , center = true
+        );
+      
+      translate([0,0,THREAD_GUIDE_LENGTH-0.5*THREAD_GUIDE_WALL_SIZE])
+      cylinder
+        ( r1 = THREAD_GUIDE_RADIUS
+        , r2 = THREAD_GUIDE_RADIUS + THREAD_GUIDE_WALL_SIZE
+        , h = THREAD_GUIDE_WALL_SIZE
+        , center = true
+        );
+    }
+
+    translate([5*cm-2*cm,-5*cm-0.5*FRAME_STOCK_SIZE,0])
+    cube([10*cm,10*cm,100*cm], center = true);
+
+    difference() {
+      cylinder
+        ( r = THREAD_GUIDE_RADIUS - 1*mm
+        , h = 100*cm
+        , center = true
+        );
+      
+      translate([5*cm+0.5*FRAME_STOCK_SIZE,0.5*FRAME_STOCK_SIZE,0])
+      cube([10*cm,10*cm,100*cm], center = true);
+
+      translate([0,1*mm+0.5*FRAME_STOCK_SIZE,0])
+      cube([10*cm,1*mm,100*cm], center = true);
+    }
+
+
+    translate([5*cm+0.5*FRAME_STOCK_SIZE+1*mm,0,0])
+    cube([10*cm,10*cm,100*cm], center = true);
+
+    translate([5*cm,0,1*cm])
+    rotate([0,90,0])
+    cylinder
+      ( d = FRAME_SLOT_SIZE
+      , h = 10*cm
+      , center = true
+      );
+    
+    // translate([5*cm,0,-5*cm+1*cm])
+    // cube([10*cm,FRAME_SLOT_SIZE,10*cm], center = true);
+
+    translate([5*cm,0,THREAD_GUIDE_LENGTH-1*cm])
+    rotate([0,90,0])
+    cylinder
+      ( d = FRAME_SLOT_SIZE
+      , h = 10*cm
+      , center = true
+      );
+    
+    // translate([5*cm,0,5*cm+THREAD_GUIDE_LENGTH-1*cm])
+    // cube([10*cm,FRAME_SLOT_SIZE,10*cm], center = true);
+  }
+}
+
+module heddle_rod_retainer() {
+  h1 = GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT + 0.5*END_PLATE_THICKNESS;
+
+  difference() {
+    union() {
+      cube
+        ( [ GUIDE_FRAME_TOTAL_THICKNESS_WITH_BEARINGS
+            + 2*END_PLATE_THICKNESS
+            + 4*mm
+          , 10*mm
+          , h1  + 4*mm
+          ]
+          , center = true
+          );
+      
+      h2 = 6*mm;
+      translate([0,4*mm,0.5*(h1 + 4*mm)+0.5*h2])
+      cube
+        ( [ GUIDE_FRAME_TOTAL_THICKNESS_WITH_BEARINGS
+            + 2*END_PLATE_THICKNESS
+            + 4*mm
+          , 2*mm
+          , h2
+          ]
+          , center = true
+          );
+    }
+    
+    cube
+      ( [ GUIDE_FRAME_TOTAL_THICKNESS_WITH_BEARINGS
+          + 2*END_PLATE_THICKNESS
+        , 10*cm
+        , h1
+        ]
+        , center = true
+        );
+    
+    translate([0,0,-5*cm])
+    cube
+      ( [ GUIDE_FRAME_TOTAL_THICKNESS_WITH_BEARINGS
+        , 10*cm
+        , 10*cm
+        ]
+        , center = true
+        );
+  }
+}
+
+module heddle() {
+  r = 3*mm;
+  thread_hole_inset = 0.5*HEDDLE_WIDTH;
+
+  difference() {
+    union() {
+      cube
+        ( [ HEDDLE_WIDTH
+          , HEDDLE_HEIGHT-HEDDLE_WIDTH
+          , HEDDLE_THICKNESS
+          ]
+        , center = true
+        );
+
+      translate([0,0.5*HEDDLE_HEIGHT-0.5*HEDDLE_WIDTH,0])
+      cylinder
+        ( d = HEDDLE_WIDTH
+        , h = HEDDLE_THICKNESS
+        , center = true
+        );
+      
+      translate([0,-0.5*HEDDLE_HEIGHT+0.5*HEDDLE_WIDTH,0])
+      cylinder
+        ( d = HEDDLE_WIDTH
+        , h = HEDDLE_THICKNESS
+        , center = true
+        );
+    }
+
+    h = HEDDLE_HEIGHT-4*thread_hole_inset-0.5*HEDDLE_WIDTH;
+    d = RAPIER_SIZE+2*PROCESS_DELTA;
+    cube
+      ( [ d
+        , HEDDLE_HEIGHT-4*thread_hole_inset-0.5*HEDDLE_WIDTH
+        , 10*cm
+        ]
+      , center = true
+      );
+    
+    translate([0,0.5*h,0])
+    cylinder
+      ( d = d
+      , h = 10*cm
+      , center = true
+      );
+    
+    translate([0,-0.5*h,0])
+    cylinder
+      ( d = d
+      , h = 10*cm
+      , center = true
+      );
+
+    
+    translate([0,0.5*HEDDLE_HEIGHT - thread_hole_inset,0])
+    cylinder(r = r, h = 10*cm, center = true);
+
+    translate([0,-0.5*HEDDLE_HEIGHT + thread_hole_inset,0])
+    cylinder(r = r, h = 10*cm, center = true);
   }
 }
 
@@ -2664,6 +2870,8 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 //   + GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT
 //   + (raised ? HEDDLE_ROD_RISE + 2*mm: 0)
 // ])
+// translate([1*cm,0,HEDDLE_ROD_RISE])
+// heddle_rod_2();
 // heddle_rod_2();
 
 // intersection() {
@@ -2702,10 +2910,10 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 // intersection() {
 // translate([0,CONTROL_CYLINDER_CENTER_OFFSET,-CONTROL_CYLINDER_DIAMETER-GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
 // // rotate([-8*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
-// control_cylinder(is_release_cylinder = false);
+// #control_cylinder(is_release_cylinder = false);
 
 // translate([0,CONTROL_CYLINDER_CENTER_OFFSET,0])
-// rotate([-11*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
+// rotate([5*CONTROL_CYLINDER_BALL_DETENT_ANGLE,0,0])
 // control_cylinder(is_release_cylinder = true);
 
 // translate([0,CONTROL_CYLINDER_CENTER_OFFSET,CONTROL_CYLINDER_DIAMETER+GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
@@ -2745,7 +2953,7 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 // ])
 // rotate([0,-90,0])
 // intersection() {
-  #motor_shaft_adaptor(is_nema_17 = true);
+  // #motor_shaft_adaptor(is_nema_17 = true);
 
 //   translate([0,0,35*mm])
 //   cube([1*cm, 1*cm, 1*cm], center = true);
@@ -2776,3 +2984,10 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 
 
 
+// thread_guide();
+
+// h = 4*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT+3*CONTROL_CYLINDER_DIAMETER;
+// translate([0,0,0.5*h-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
+// heddle_rod_retainer();
+
+heddle();
