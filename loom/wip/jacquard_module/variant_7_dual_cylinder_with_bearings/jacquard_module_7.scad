@@ -2600,7 +2600,7 @@ module thread_guide() {
 
     translate([5*cm,0,THREAD_GUIDE_LENGTH-1*cm])
     rotate([0,90,0])
-    cylinder
+    #cylinder
       ( d = FRAME_SLOT_SIZE
       , h = 10*cm
       , center = true
@@ -2984,10 +2984,10 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 
 
 
-// thread_guide();
+thread_guide();
 
 // h = 4*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT+3*CONTROL_CYLINDER_DIAMETER;
 // translate([0,0,0.5*h-0.5*GUIDE_FRAME_CYLINDER_SEPARATION_HEIGHT])
 // heddle_rod_retainer();
 
-heddle();
+// heddle();
